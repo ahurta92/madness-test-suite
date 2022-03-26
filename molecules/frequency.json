@@ -1,0 +1,1334 @@
+{
+    "AlF": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "Ar": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "BF": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "BH2Cl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "BH2F": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "BH3": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "BHF2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "Be": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "BeH2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "C2H2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "C2H4": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "C6H6": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CCl4": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH2BH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH2NH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH2PH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH3BH2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH3Cl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH3F": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH3NH2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH3OH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH3SH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH4": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CO": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CO2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CS": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CSO": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "Cl2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "ClCN": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "ClF": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "F2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "FCN": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "FNO": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "H2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "H2O": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HBO": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HBS": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCCCl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCCF": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCHO": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCHS": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCN": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCONH2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCOOH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCP": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HF": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HNC": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HNO": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HNS": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HOCl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HOF": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HOOH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "He": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "Li2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "LiBH4": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "LiCN": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "LiCl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "LiH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "LiH_s": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "Mg": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "Mg2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "N2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "N2H2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "N2H4": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NH2Cl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NH2F": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NH2OH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NH3": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NH3O": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NOCl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NP": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "Na2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NaCN": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NaCl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NaH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NaLi": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "Ne": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "O3": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "OCl2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "OF2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "P2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "P2H4": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "PH2OH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "PH3": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "PH3O": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "S2H2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "SCl2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "SF2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "SH2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "SO2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "SiH3Cl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "SiH3F": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "SiH4": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "SiO": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    }
+}
+{
+    "AlF": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "Ar": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "BF": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "BH2Cl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "BH2F": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "BH3": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "BHF2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "Be": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "BeH2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "C2H2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "C2H4": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "C6H6": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CCl4": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH2BH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH2NH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH2PH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH3BH2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH3Cl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH3F": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH3NH2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH3OH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH3SH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CH4": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CO": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CO2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CS": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "CSO": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "Cl2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "ClCN": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "ClF": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "F2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "FCN": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "FNO": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "H2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "H2O": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HBO": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HBS": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCCCl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCCF": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCHO": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCHS": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCN": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCONH2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCOOH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCP": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HCl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HF": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HNC": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HNO": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HNS": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HOCl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HOF": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "HOOH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "He": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "Li2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "LiBH4": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "LiCN": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "LiCl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "LiH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "LiH_s": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "Mg": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "Mg2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "N2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "N2H2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "N2H4": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NH2Cl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NH2F": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NH2OH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NH3": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NH3O": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NOCl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NP": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "Na2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NaCN": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NaCl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NaH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "NaLi": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "Ne": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "O3": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "OCl2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "OF2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "P2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "P2H4": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "PH2OH": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "PH3": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "PH3O": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "S2H2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "SCl2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "SF2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "SH2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "SO2": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "SiH3Cl": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "SiH3F": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "SiH4": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    },
+    "SiO": {
+        "lda": {
+            "dipole": [
+                0.0
+            ]
+        }
+    }
+}
