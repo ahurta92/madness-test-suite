@@ -95,12 +95,13 @@
             "dipole": [
                 0.0
             ],
-            "excited_state": 4
+            "excited-state": 4
         },
         "lda": {
             "dipole": [
                 0.0
-            ]
+            ],
+            "excited-state": 4
         }
     },
     "BeH2": {
