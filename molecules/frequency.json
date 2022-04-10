@@ -1,1238 +1,480 @@
 {
     "AlF": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "Ar": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "BF": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "BH2Cl": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "BH2F": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "BH3": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "BHF2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "Be": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
             "excited-state": 4
         },
         "lda": {
-            "dipole": [
-                0.0
-            ],
             "excited-state": 4
         }
     },
     "BeH2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "C2H2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "C2H4": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "C6H6": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "CCl4": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "CH2BH": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "CH2NH": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "CH2PH": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "CH3BH2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "CH3Cl": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "CH3F": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "CH3NH2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "CH3OH": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "CH3SH": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "CH4": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "CO": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "CO2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "CS": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "CSO": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "Cl2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "ClCN": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "ClF": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "F2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "FCN": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "FNO": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "H2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "H2O": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HBO": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HBS": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HCCCl": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HCCF": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HCHO": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HCHS": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HCN": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HCONH2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HCOOH": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HCP": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HCl": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HF": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HNC": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HNO": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HNS": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HOCl": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HOF": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "HOOH": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "He": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "Li2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "LiBH4": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "LiCN": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "LiCl": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "LiH": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "LiH_s": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "Mg": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "Mg2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "N2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "N2H2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "N2H4": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "NH2Cl": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "NH2F": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "NH2OH": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "NH3": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "NH3O": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "NOCl": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "NP": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "Na2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "NaCN": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "NaCl": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "NaH": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "NaLi": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "Ne": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "O3": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "OCl2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "OF2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "P2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "P2H4": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "PH2OH": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "PH3": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "PH3O": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "S2H2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "SCl2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "SF2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "SH2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "SO2": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "SiH3Cl": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "SiH3F": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "SiH4": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     },
     "SiO": {
         "hf": {
-            "dipole": [
-                0.0
-            ],
-            "excited_state": 4
-        },
-        "lda": {
-            "dipole": [
-                0.0
-            ]
+            "excited-state": 4
         }
     }
 }
