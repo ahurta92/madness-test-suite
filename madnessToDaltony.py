@@ -125,15 +125,3 @@ def dalton_polar_input(madmol, xc, operator, basis):
         file.write(mol_input)
     return run_dir, dal_run_file.split('/')[-1], mol_file.split('/')[-1]
 
-
-def run_dalton(rdir, dfile, mfile):
-    # Change to run directory
-    os.chdir(rdir)
-    # Create dalton command
-    # dalton [.dal] [.mol]
-    daltonCommand = 'dalton '+dfile+' '+mfile
-    process = subprocess.Popen(daltonCommand.split(), stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    os.chdir(PROOT)
-
-    return output, error
