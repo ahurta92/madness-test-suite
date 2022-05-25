@@ -1,10 +1,14 @@
+import json
+import os
+
+import matplotlib.pyplot as plt
+
+from daltonRunner import DaltonRunner
 
 import numpy as np
-from numpy import linalg as LA
-from madnessToDaltony import *
-import os
 import pandas as pd
-import json
+
+from madnessToDaltony import *
 
 
 class MadnessReader:
@@ -14,7 +18,7 @@ class MadnessReader:
         PROOT = os.getcwd()
         if not os.path.exists("dalton"):
             os.mkdir("dalton")
-        with open(PROOT+'/molecules/frequency.json') as json_file:
+        with open(PROOT + '/molecules/frequency.json') as json_file:
             self.freq_json = json.loads(json_file.read())
 
     def __tensor_to_numpy(self, j):
@@ -72,8 +76,8 @@ class MadnessReader:
                 # diagonalize the polarizability
                 omega = self.__tensor_to_numpy(iter['omega']).flatten()
                 # alpha=.5*(alpha+alpha.transpose())
-                #w, v = LA.eig(alpha)
-                #print("alpha : ",alpha)
+                # w, v = LA.eig(alpha)
+                # print("alpha : ",alpha)
                 omega_array[i, :] = omega
                 dres[i, :] = self.__tensor_to_numpy(
                     iter['density_residuals']).flatten()
@@ -101,7 +105,6 @@ class MadnessReader:
         final_res = pd.concat([iters_df, final_res], axis=1)
         return final_omega, final_res
 
-
     def __open_frequency_rbj(self, mol, xc, operator, freq):
 
         sfreq = "%f" % freq
@@ -110,8 +113,8 @@ class MadnessReader:
         # second number after decimal
         f2 = sfreq.split('.')[1]
 
-        moldir = PROOT+'/'+xc+'/'+mol
-        dfile = operator+'_'+xc+'_'+f1+'-'+f2
+        moldir = PROOT + '/' + xc + '/' + mol
+        dfile = operator + '_' + xc + '_' + f1 + '-' + f2
         jsonf = 'response_base.json'
 
         path = '/'.join([moldir, dfile, jsonf])
@@ -123,7 +126,7 @@ class MadnessReader:
 
     def __open_ground_json(self, mol, xc):
 
-        moldir = PROOT+'/'+xc+'/'+mol
+        moldir = PROOT + '/' + xc + '/' + mol
         jsonf = 'calc_info.json'
 
         path = '/'.join([moldir, jsonf])
@@ -139,14 +142,15 @@ class MadnessReader:
 
         params = j['parameters']
         scf_e_data = j['scf_e_data']
+        timing = j['wall_time']
 
-        return params, scf_e_data
+        return params, scf_e_data, timing
 
     def __open_excited_rbj(self, mol, xc, num_states):
 
         print(PROOT)
-        moldir = PROOT+'/'+xc+'/'+mol
-        dfile = "excited-"+str(num_states)
+        moldir = PROOT + '/' + xc + '/' + mol
+        dfile = "excited-" + str(num_states)
         jsonf = 'response_base.json'
 
         path = '/'.join([moldir, dfile, jsonf])
@@ -186,8 +190,8 @@ class MadnessReader:
                 # diagonalize the polarizability
                 alpha = self.__tensor_to_numpy(iter['polar']).flatten()
                 # alpha=.5*(alpha+alpha.transpose())
-                #w, v = LA.eig(alpha)
-                #print("alpha : ",alpha)
+                # w, v = LA.eig(alpha)
+                # print("alpha : ",alpha)
                 polar_data[i, :] = alpha
                 dres[i, :] = self.__tensor_to_numpy(
                     iter['density_residuals']).flatten()
@@ -217,49 +221,251 @@ class MadnessReader:
         return final_polar, final_res
 
     def __get_polar_data(self, rbase_j):
-        num_states = rbase_j['response_parameters']['states']
-        fp, fres = self.__read_response_protocol_data(
+        num_states = rbase_j['parameters']['states']
+        freq_data, residuals = self.__read_response_protocol_data(
             rbase_j['protocol_data'], num_states)
-        return fp.iloc[-1, 1:].append(fres.iloc[-1, 3:])
+        params = rbase_j['parameters']
+        return params, freq_data, residuals
 
     # TODO get the ground data
     def get_polar_result(self, mol, xc, operator):
 
         freq = freq_json[mol][xc][operator]
+        full_freq_data = {}
         fdata = {}
+
+        thresh_data = {}
+        k_data = {}
+        iter_data = {}
+        d_res_data = {}
+        bsh_res_data = {}
+        params = None
+
         for f in freq:
             rbasej = self.__open_frequency_rbj(mol, xc, operator, f)
-            fdata[str(f)] = self.__get_polar_data(rbasej)
+            num_states = rbasej['parameters']['states']
+            params, freq_data, residuals = self.__get_polar_data(rbasej)
+
+            fdata[str(f)] = pd.DataFrame(freq_data)
+            fdata[str(f)] = freq_data.iloc[-1, :]
+
+            iterations = residuals.iloc[:, 0:1]
+            k = residuals.iloc[:, 1:2]
+            thresh = residuals.iloc[:, 2:3]
+            d_residuals = residuals.iloc[:, 3:(3 + num_states)]
+            bsh_residuals = residuals.iloc[:, (3 + num_states):]
+
+            k_data[str(f)] = pd.DataFrame(k)
+            iter_data[str(f)] = pd.DataFrame(iterations)
+            thresh_data[str(f)] = pd.DataFrame(thresh)
+
+            d_res_data[str(f)] = pd.DataFrame(d_residuals)
+            bsh_res_data[str(f)] = pd.DataFrame(bsh_residuals)
 
         rdf = pd.DataFrame(fdata).T
-        return rdf
+        return params, iter_data, k_data, thresh_data, d_res_data, bsh_res_data, full_freq_data, rdf
 
     def get_excited_data(self, mol, xc):
 
         num_states = freq_json[mol][xc]['excited-state']
         fdata = {}
         rbasej = self.__open_excited_rbj(mol, xc, num_states)
-        omega,residuals = self.__read_excited_proto_iter_data(
+        omega, residuals = self.__read_excited_proto_iter_data(
             rbasej['protocol_data'], num_states)
         params = rbasej['parameters']
-        return params,omega,residuals
+        return params, omega, residuals
+
     def get_excited_result(self, mol, xc):
 
         num_states = freq_json[mol][xc]['excited-state']
-        params,omega,residuals=self.get_excited_data(mol,xc)
+        params, full_omega, residuals = self.get_excited_data(mol, xc)
+        iterations = residuals.iloc[:, 0:1]
+        k = residuals.iloc[:, 1:2]
+        thresh = residuals.iloc[:, 2:3]
+        d_residuals = residuals.iloc[:, 3:(3 + num_states)]
+        bsh_residuals = residuals.iloc[:, (3 + num_states):]
+
+        return params, iterations, k, thresh, d_residuals, bsh_residuals, full_omega.iloc[-1, 3:], full_omega
 
 
+class FrequencyData:
+
+    def __init__(self, mol, xc, operator):
+        self.dalton_data = {}
+        self.mol = mol
+        self.xc = xc
+        self.operator = operator
+        mad_reader = MadnessReader()
+
+        self.ground_params, self.ground_scf_data, self.ground_timing = mad_reader.get_ground_scf_data(mol, xc)
+        e_name_list = ['e_coulomb', 'e_kinetic', 'e_local', 'e_nrep', 'e_tot']
+        self.ground_e = {}
+        for e_name in e_name_list:
+            self.ground_e[e_name] = self.ground_scf_data[e_name][-1]
+        self.params, self.iter_data, self.k_data, self.thresh_data, self.d_residuals, self.bsh_residuals, \
+        self.full_polar, self.polar_df = mad_reader.get_polar_result(
+            mol, xc,
+            operator)
+        self.num_states = self.params["states"]
+
+    def plot_density_residuals(self):
+
+        for f, r_df in self.d_residuals.items():
+            r_df.plot(title=str(self.mol) + 'Frequency Density Residual plot: ' + str(f), logy=True)
+
+    def plot_bsh_residuals(self):
+
+        for f, r_df in self.bsh_residuals.items():
+            r_df.plot(title=str(self.mol) + 'Frequency BSH Residual plot: ' + str(f), logy=True)
+
+    def get_thresh_data(self):
+        return self.thresh_data
+
+    def compare_dalton(self, basis):
+        dalton_reader = DaltonRunner()
+        ground_dalton, response_dalton = dalton_reader.get_frequency_result(self.mol, self.xc, self.operator, basis)
+
+        ground_compare = pd.concat(
+            [ground_dalton, pd.Series(self.ground_timing, index=['wall-time']), pd.Series(self.ground_e), ])
+
+        self.dalton_data[basis] = response_dalton
+        freq = response_dalton.iloc[:, 0]
+        polar_df = self.polar_df.iloc[:, 3:].reset_index(drop=True)
+        polar_df = pd.concat([freq, polar_df], axis=1)
+
+        diff_df = pd.concat([polar_df.iloc[:, 0], polar_df.iloc[:, 1:] - response_dalton.iloc[:, 1:]], axis=1)
+
+        return ground_compare, response_dalton, polar_df, diff_df
+
+    def plot_polar_data(self, basis, ij_list):
+        dalton_reader = DaltonRunner()
+        if basis in self.dalton_data:
+            response_dalton = self.dalton_data[basis]
+        else:
+            ground_dalton, response_dalton = dalton_reader.get_frequency_result(self.mol, self.xc, self.operator, basis)
+            self.dalton_data[basis] = response_dalton
+
+        dal_list = []
+        mad_list = []
+
+        for e in ij_list:
+            dal_list.append('dal-' + e)
+            mad_list.append('mad-' + e)
+
+        dal_df = response_dalton[ij_list].reset_index(drop=True)
+        dal_df.columns = dal_list
+
+        freq = response_dalton.iloc[:, 0]
+
+        mad_df = self.polar_df[ij_list].reset_index(drop=True)
+        mad_df.columns = mad_list
+
+        comp_df = pd.concat([freq, dal_df, mad_df], axis=1).set_index('frequencies')
+        comp_df.plot(title=str(self.mol))
+
+    def compare_polar_basis_list(self, ij_j_list, basis_list):
+        dalton_reader = DaltonRunner()
+
+        freq = pd.Series(self.polar_df.index.values)
+        freq.name = 'Frequency'
+
+        compare_dict = [freq]
+
+        for basis in basis_list:
+            ground_dalton, response_dalton = dalton_reader.get_frequency_result(self.mol, self.xc, self.operator, basis)
+            col = response_dalton[ij_j_list]
+            col.name = basis
+            compare_dict.append(col)
+        polar_df = self.polar_df.iloc[:, 3:].reset_index(drop=True)
+        mad_col = polar_df[ij_j_list].iloc[:]
+        mad_col.name = 'MRA'
+        compare_dict.append(mad_col)
+        polar_df = pd.concat(compare_dict, axis=1)
+        polar_df.set_index('Frequency', inplace=True)
+
+        polar_df.plot(title=self.mol + ' Polarizability ' + ij_j_list)
+
+        # Epolar_df = pd.concat([freq, polar_df], axis=1)
+
+        return polar_df
+
+    def compare_diff_basis_list(self, ij_j_list, basis_list):
+        dalton_reader = DaltonRunner()
+
+        freq = pd.Series(self.polar_df.index.values)
+        freq.name = 'Frequency'
+
+        compare_dict = [freq]
+
+        polar_df = self.polar_df.iloc[:, 3:].reset_index(drop=True)
+        mad_col = polar_df[ij_j_list].iloc[:]
+        mad_col.name = 'MRA'
+
+        for basis in basis_list:
+            ground_dalton, response_dalton = dalton_reader.get_frequency_result(self.mol, self.xc, self.operator, basis)
+            col = response_dalton[ij_j_list]
+            col = col - mad_col
+            col.name = basis
+            compare_dict.append(col)
+        # compare_dict.append(mad_col)
+        polar_df = pd.concat(compare_dict, axis=1)
+        polar_df.set_index('Frequency', inplace=True)
+
+        polar_df.plot(title=self.mol + ' Polarizability ' + ij_j_list)
+        plotname = 'diff_' + self.mol + '_' + basis_list[0] + '.svg'
+
+        plt.savefig(plotname)
+
+        # Epolar_df = pd.concat([freq, polar_df], axis=1)
+
+        return polar_df
 
 
+class ExcitedData:
 
+    def __init__(self, mol, xc):
+        self.mol = mol
+        self.xc = xc
+        mad_reader = MadnessReader()
 
+        self.ground_params, self.ground_scf_data, self.ground_timing = mad_reader.get_ground_scf_data(mol, xc)
+        e_name_list = ['e_coulomb', 'e_kinetic', 'e_local', 'e_nrep', 'e_tot']
+        self.ground_e = {}
+        for e_name in e_name_list:
+            self.ground_e[e_name] = self.ground_scf_data[e_name][-1]
+        self.params, self.iterations, self.k, self.thresh_data, self.d_residuals, self.bsh_residuals, self.omega, self.full_omega = mad_reader.get_excited_result(
+            mol, xc)
+        self.num_states = self.params["states"]
 
+    def get_thresh_data(self):
+        return self.thresh_data
 
+    def plot_density_residuals(self):
+        self.d_residuals.plot(title=str(self.mol) + ' Excited Density Residual plot: ', logy=True)
 
+    def plot_bsh_residuals(self):
+        self.bsh_residuals.plot(title=str(self.mol) + 'Excited  BSH Residual plot: ', logy=True)
+
+    def compare_dalton(self, basis):
+        dalton_reader = DaltonRunner()
+        ground_dalton, response_dalton = dalton_reader.get_excited_result(self.mol, self.xc, basis)
+
+        ground_compare = pd.concat(
+            [ground_dalton, pd.Series(self.ground_timing, index=['wall_time']), pd.Series(self.ground_e)])
+        omega_df = response_dalton.iloc[0:self.num_states]
+        omega_df['mad-omega'] = self.omega
+        omega_df['delta-omega'] = omega_df['freq'] - omega_df['mad-omega']
+        omega_df['d-residual'] = self.d_residuals.iloc[-1, :].reset_index(drop=True)
+        omega_df['bshx-residual'] = self.bsh_residuals.iloc[-1, 0:self.num_states].reset_index(drop=True)
+        omega_df['bshy-residual'] = self.bsh_residuals.iloc[-1, self.num_states::].reset_index(drop=True)
+
+        return ground_compare, omega_df
 
 
 # input response_info json and returns a dict of response paramters
- # and a list of dicts of numpy arrays holding response data
+# and a list of dicts of numpy arrays holding response data
+
+
 class MadRunner:
 
     def run_response(self, mol, xc, operator):

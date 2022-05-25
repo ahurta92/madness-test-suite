@@ -39,7 +39,7 @@ def line2array(line):
     num_line = []
     for l in line.split():
         num_line.append(float(l))
-    return np.array(num_line)
+    return np.array(num_line, dtype=np.float128).T
 
 
 def atom_dict_to_coomatrix(atom_dict):
@@ -50,49 +50,51 @@ def atom_dict_to_coomatrix(atom_dict):
             atom_list.append(atom)
             coordinate_list.append(line2array(line))
 
-    return atom_list, np.array(coordinate_list)
+    coords = np.array(coordinate_list).T
+    print('coords ', coords)
+    print('coords ', coords.shape)
+    return np.array(atom_list), coords
 
 
 def create_distance_matrix(coo):
-    num_atoms = coo.shape[0]
+    num_atoms = coo.shape[1]
     d_matrix = np.zeros((num_atoms, num_atoms))
 
     for i in range(num_atoms):
         for j in range(i, num_atoms):
-            d_matrix[i, j] = LA.norm(coo[i, :] - coo[j, :])
+            d_matrix[i, j] = LA.norm(coo[:, i] - coo[:, j])
     d_matrix = d_matrix + d_matrix.T
 
     return d_matrix
 
 
 def compute_com(atoms, coor):
-    num_atoms = coor.shape[0]
-    rx = 0;
-    ry = 0;
-    rz = 0;
-    M = 0;
+    num_atoms = coor.shape[1]
+    rx = 0
+    ry = 0
+    rz = 0
+    M = 0
     for i in range(num_atoms):
         # Look up the mass
         mi = float(pt[pt['Symbol'] == atoms[i]]['AtomicMass'])
         M += mi
-        rx += mi * coor[i, 0]
-        ry += mi * coor[i, 1]
-        rz += mi * coor[i, 2]
+        rx += mi * coor[0, i]
+        ry += mi * coor[1, i]
+        rz += mi * coor[2, i]
 
-    com = np.array([rx, ry, rz])
+    com = np.array([[rx, ry, rz]]).T
     return com / M
 
 
 def compute_moment_tensor(atoms, coor):
-    num_atoms = coor.shape[0]
+    num_atoms = coor.shape[1]
     I = np.zeros((3, 3))
 
     for i in range(num_atoms):
         mi = float(pt[pt['Symbol'] == atoms[i]]['AtomicMass'])
-
-        xi = coor[i, 0]
-        yi = coor[i, 1]
-        zi = coor[i, 2]
+        xi = coor[0, i]
+        yi = coor[1, i]
+        zi = coor[2, i]
 
         Ixx = mi * (yi ** 2 + zi ** 2)
         Iyy = mi * (xi ** 2 + zi ** 2)
@@ -138,40 +140,75 @@ def getSeaInfo(D):
     idx = []
     for i in range(len(uniqD)):
         ks.append(len(Dcol[uniqD[i] == Dcol]))
-        np.where(uniqD[i] == Dcol)[0]
         idx.append(np.where(uniqD[i] == Dcol)[0])
     return ks, idx
 
 
+def selectPerp(n):
+    # normalize
+    print("n: ", n)
+    print("norm: ", LA.norm(n))
+    n = n / LA.norm(n)
+    print("n: ", n)
+    # define the unit vectors
+    nx = np.array([1, 0, 0])
+    ny = np.array([0, 1, 0])
+    nz = np.array([0, 0, 1])
+    unit = [nx, ny, nz]
+    selected = None
+    min_dot = 10000
+    for ni in unit:
+        dot = np.dot(ni, n)
+        if dot == 0:
+            return ni
+        elif dot <= min_dot:
+            selected = ni
+            min_dot = dot
+    nPerp = selected - np.dot(selected, n) * n
+    return nPerp
+
+
 def Rotation(n, theta):
+
     n1 = n[0]
     n2 = n[1]
     n3 = n[2]
-    r1 = [np.cos(theta) + n1 ** 2 * (1 - np.cos(theta)), n1 * n2 * (1 - np.cos(theta)) - n3 * np.sin(theta),
-          n1 * n3 * (1 - np.cos(theta)) + n2 * np.sin(theta)]
-    r2 = [n1 * n2 * (1 - np.cos(theta)) + n3 * np.sin(theta), np.cos(theta) + n2 ** 2 * (1 - np.cos(theta)),
-          n2 * n3 * (1 - np.cos(theta)) - n1 * np.sin(theta)]
-    r3 = [n1 * n3 * (1 - np.cos(theta)) - n2 * np.sin(theta), n3 * n2 * (1 - np.cos(theta)) + n1 * np.sin(theta),
-          np.cos(theta) + n3 ** 2 * (1 - np.cos(theta))]
 
-    return np.array([r1, r2, r3])
+    R = np.zeros((3, 3), dtype=np.float128)
+
+    R[0, 0] = np.cos(theta) + n1 ** 2 * (1 - np.cos(theta))
+    R[1, 1] = np.cos(theta) + n2 ** 2 * (1 - np.cos(theta))
+    R[2, 2] = np.cos(theta) + n3 ** 2 * (1 - np.cos(theta))
+
+    R[0, 1] = n1 * n2 * (1 - np.cos(theta)) - n3 * np.sin(theta)
+    R[1, 0] = n1 * n2 * (1 - np.cos(theta)) + n3 * np.sin(theta)
+
+    R[0, 2] = n1 * n3 * (1 - np.cos(theta)) + n2 * np.sin(theta)
+    R[2, 0] = n1 * n3 * (1 - np.cos(theta)) - n2 * np.sin(theta)
+
+    R[1, 2] = n2 * n3 * (1 - np.cos(theta)) - n1 * np.sin(theta)
+    R[2, 1] = n3 * n2 * (1 - np.cos(theta)) + n1 * np.sin(theta)
+
+    return R
 
 
 class SymmetryData:
 
     def __init__(self, mol):
 
+        self.rotor_types = None
+        self.rotor_type = None
         self.SEA_atom_index = None
         self.SEA_sizes = None
         self.atom_dict = get_atom_dict(mol)
         self.atoms, self.coordinates = atom_dict_to_coomatrix(self.atom_dict)
 
-        self.atoms = np.array(self.atoms)
+        self.num_atoms = len(self.atoms)
         self.com = compute_com(self.atoms, self.coordinates)
 
         if LA.norm(self.com) > .00005:
             self.coordinates = self.coordinates - self.com
-            self.com = np.array([0, 0, 0])
+            self.com = np.array([[0, 0, 0]]).T
 
         self.I = compute_moment_tensor(self.atoms, self.coordinates)
         self.D = create_distance_matrix(self.coordinates)
@@ -182,11 +219,13 @@ class SymmetryData:
 
         Is = []
         for k, atom_idx in zip(self.SEA_sizes, self.SEA_atom_index):
-
+            print(k)
             if k > 1:
                 atoms = self.atoms[atom_idx]
-                coordinates = self.coordinates[atom_idx]
+                print(atoms)
+                coordinates = self.coordinates[:, atom_idx]
                 com = compute_com(atoms, coordinates)
+                print("coordinates: ", coordinates, "\n com: ", com)
                 Ia, Ivec = LA.eig(compute_moment_tensor(atoms, coordinates - com))
                 sort = np.argsort(Ia)
                 Is.append((Ia[sort], Ivec[:, sort]))
@@ -197,15 +236,97 @@ class SymmetryData:
     def get_all_rotations(self):
         rotations = []
         rotation_k = []
-        for k, I, atom_idx in zip(self.SEA_sizes, self.Is, self.SEA_atom_index):
+        for k, eigs, atom_idx in zip(self.SEA_sizes, self.Is, self.SEA_atom_index):
             if k > 2:
-                principals = I[0]
-                vectors = I[1]
-                print(principals, "\n", vectors)
+                I = eigs[0]
+                vec = eigs[1]
+
+                IA = I[0]
+                IB = I[1]
+                IC = I[2]
+
+                if IA + IB == IC:
+                    pass
+
             else:
                 if k == 2:
-                    principals = I[0]
+                    principals = eigs[0]
                     vectors = I[1]
                     print(principals, "\n", vectors)
                     pass
                 pass
+
+    def check_rotation(self, R):
+        num_atoms = self.num_atoms
+        print("num atoms ", num_atoms)
+        X = self.coordinates
+        print("x shape", X.shape)
+        Y = np.matmul(R, X)
+        print("y shape", Y.shape)
+        print("X: ", X)
+        print("Y: ", X)
+        for i in range(num_atoms):
+            yi = Y[:, [i]]
+            atom = self.atoms[i]
+            atoms_idx = np.argwhere(atom == self.atoms)
+            found = False
+            for j in atoms_idx:
+                xj = X[:, [j[0]]]
+                if LA.norm(yi - xj) < .000006:
+                    print("sub between yi and xj: ", LA.norm(yi - xj))
+                    found = True
+            if not found:
+                return False
+        return True
+
+    def find_rotor_type(self):
+
+        I, V = LA.eigh(self.I)
+
+        IA = I[0]
+        IB = I[1]
+        IC = I[2]
+        print(I)
+
+        def is_equal(IA, IB):
+            return np.abs(IA - IB) < .00005
+
+        if IA == 0 and is_equal(IB, IC):
+            self.rotor_type = "linear"
+        if is_equal(IA, IB) and is_equal(IB, IC):
+            self.rotor_type = "spherical"
+        if is_equal(IA, IB) and not is_equal(IB, IC) or not is_equal(IA, IB) and is_equal(IB, IC):
+            self.rotor_type = "symmetric"
+        if not is_equal(IA, IB) and not is_equal(IB, IC) and not is_equal(IA, IC):
+            self.rotor_type = "asymmetric"
+
+    def compute_rotor_type(self, I):
+
+        IA = I[0]
+        IB = I[1]
+        IC = I[2]
+        print(I)
+
+        def is_equal(IA, IB):
+            return np.abs(IA - IB) < .00005
+
+        if IA == 0 and is_equal(IB, IC):
+            return "linear"
+        if is_equal(IA, IB) and is_equal(IB, IC):
+            return "spherical"
+        if is_equal(IA, IB) and not is_equal(IB, IC) or not is_equal(IA, IB) and is_equal(IB, IC):
+            return "symmetric"
+        if not is_equal(IA, IB) and not is_equal(IB, IC) and not is_equal(IA, IC):
+            return "asymmetric"
+
+    def find_sea_rotor_type(self):
+        self.rotor_types = []
+        for k, atom_idx, II in zip(self.SEA_sizes, self.SEA_atom_index, self.Is):
+            if k>1:
+
+                I=II[0]
+                print(I)
+                self.rotor_types.append(self.compute_rotor_type(I))
+            else:
+                self.rotor_types.append("atom")
+
