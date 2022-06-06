@@ -130,7 +130,7 @@ class MadnessReader:
         jsonf = 'calc_info.json'
 
         path = '/'.join([moldir, jsonf])
-        print("mad_path",path)
+        #print("mad_path",path)
 
         with open(path) as json_file:
             response_j = json.loads(json_file.read())
