@@ -9,6 +9,7 @@ import subprocess
 # the periodic table and frequency json
 
 PROOT = os.getcwd()
+DALROOT = os.path.join(PROOT, os.pardir)
 print(PROOT)
 
 if not os.path.exists("dalton"):

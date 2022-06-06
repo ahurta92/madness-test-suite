@@ -130,6 +130,7 @@ class MadnessReader:
         jsonf = 'calc_info.json'
 
         path = '/'.join([moldir, jsonf])
+        print("mad_path",path)
 
         with open(path) as json_file:
             response_j = json.loads(json_file.read())
@@ -311,12 +312,30 @@ class FrequencyData:
     def plot_density_residuals(self):
 
         for f, r_df in self.d_residuals.items():
-            r_df.plot(title=str(self.mol) + 'Frequency Density Residual plot: ' + str(f), logy=True)
+            r_df.plot(title=str(self.mol) + ' frequency density residual plot: ' + str(f), logy=True)
 
     def plot_bsh_residuals(self):
 
         for f, r_df in self.bsh_residuals.items():
             r_df.plot(title=str(self.mol) + 'Frequency BSH Residual plot: ' + str(f), logy=True)
+
+    def final_bsh_residuals(self):
+        val = {}
+        for f, d in self.bsh_residuals.items():
+            val[f] = d.iloc[-1, :]
+        val = pd.DataFrame(val).T
+        return val
+
+    def final_density_residuals(self):
+        val = {}
+        for f, d in self.d_residuals.items():
+            val[f] = d.iloc[-1, :]
+        val = pd.DataFrame(val).T
+
+        newKeys = {'d0': 'density_residualX', 'd1': 'density_residualY', 'd2': 'density_residualZ'}
+
+        val.rename(columns=newKeys, inplace=True)
+        return val
 
     def get_thresh_data(self):
         return self.thresh_data

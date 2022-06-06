@@ -20,3 +20,8 @@ data_tables/*
 .ipynb_checkpoints/madness_to_dalton-checkpoint.ipynb
 .ipynb_checkpoints/Untitled-checkpoint.ipynb
 __pycache__/read_madness_json.cpython-39.pyc
+!/dalton/
+!/data_tables/
+!/data_tables/
+!/lda/
+!/symmetry fun.ipynb
