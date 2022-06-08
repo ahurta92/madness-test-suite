@@ -7,10 +7,9 @@ import subprocess
 
 # make this into a class that way I can define class members like 
 # the periodic table and frequency json
-
 PROOT = os.getcwd()
 DALROOT = os.path.join(PROOT, os.pardir)
-
+DALROOT += "/dalton/"
 if not os.path.exists("dalton"):
     os.mkdir("dalton")
 
