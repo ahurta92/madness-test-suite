@@ -130,7 +130,7 @@ class MadnessReader:
         jsonf = 'calc_info.json'
 
         path = '/'.join([moldir, jsonf])
-        #print("mad_path",path)
+        # print("mad_path",path)
 
         with open(path) as json_file:
             response_j = json.loads(json_file.read())
@@ -240,10 +240,15 @@ class MadnessReader:
         iter_data = {}
         d_res_data = {}
         bsh_res_data = {}
+        wall_time = {}
+        cpu_time = {}
         params = None
 
         for f in freq:
             rbasej = self.__open_frequency_rbj(mol, xc, operator, f)
+
+            time_data_f = rbasej["time_data"]
+
             num_states = rbasej['parameters']['states']
             params, freq_data, residuals = self.__get_polar_data(rbasej)
 
@@ -263,8 +268,22 @@ class MadnessReader:
             d_res_data[str(f)] = pd.DataFrame(d_residuals)
             bsh_res_data[str(f)] = pd.DataFrame(bsh_residuals)
 
+            cpu_time_data_f = time_data_f['cpu_time']
+            wall_time_data_f = time_data_f['wall_time']
+            cpu_dict = {}
+            for k, v in cpu_time_data_f.items():
+                cpu_dict[k] = v[0]
+
+            cpu_time[str(f)] = pd.DataFrame(cpu_dict)
+
+            wall_time_dict = {}
+            for k, v in wall_time_data_f.items():
+                wall_time_dict[k] = v[0]
+
+            wall_time[str(f)] = pd.DataFrame(wall_time_dict)
+
         rdf = pd.DataFrame(fdata).T
-        return params, iter_data, k_data, thresh_data, d_res_data, bsh_res_data, full_freq_data, rdf
+        return params, iter_data, k_data, thresh_data, d_res_data, bsh_res_data, full_freq_data, rdf, wall_time, cpu_time
 
     def get_excited_data(self, mol, xc):
 
@@ -274,19 +293,34 @@ class MadnessReader:
         omega, residuals = self.__read_excited_proto_iter_data(
             rbasej['protocol_data'], num_states)
         params = rbasej['parameters']
-        return params, omega, residuals
+        time_data_f = rbasej["time_data"]
+        cpu_time_data_f = time_data_f['cpu_time']
+        wall_time_data_f = time_data_f['wall_time']
+
+        cpu_dict = {}
+        for k, v in cpu_time_data_f.items():
+            cpu_dict[k] = v[0]
+
+        cpu_time = pd.DataFrame(cpu_dict)
+
+        wall_time_dict = {}
+        for k, v in wall_time_data_f.items():
+            wall_time_dict[k] = v[0]
+
+        wall_time = pd.DataFrame(wall_time_dict)
+        return params, omega, residuals, wall_time, cpu_time
 
     def get_excited_result(self, mol, xc):
 
         num_states = freq_json[mol][xc]['excited-state']
-        params, full_omega, residuals = self.get_excited_data(mol, xc)
+        params, full_omega, residuals,cpu_time,wall_time = self.get_excited_data(mol, xc)
         iterations = residuals.iloc[:, 0:1]
         k = residuals.iloc[:, 1:2]
         thresh = residuals.iloc[:, 2:3]
         d_residuals = residuals.iloc[:, 3:(3 + num_states)]
         bsh_residuals = residuals.iloc[:, (3 + num_states):]
 
-        return params, iterations, k, thresh, d_residuals, bsh_residuals, full_omega.iloc[-1, 3:], full_omega
+        return params, iterations, k, thresh, d_residuals, bsh_residuals, full_omega.iloc[-1, 3:], full_omega,wall_time,cpu_time
 
 
 class FrequencyData:
@@ -304,7 +338,7 @@ class FrequencyData:
         for e_name in e_name_list:
             self.ground_e[e_name] = self.ground_scf_data[e_name][-1]
         self.params, self.iter_data, self.k_data, self.thresh_data, self.d_residuals, self.bsh_residuals, \
-        self.full_polar, self.polar_df = mad_reader.get_polar_result(
+        self.full_polar, self.polar_df, self.wall_time, self.cpu_time = mad_reader.get_polar_result(
             mol, xc,
             operator)
         self.num_states = self.params["states"]
@@ -452,7 +486,7 @@ class ExcitedData:
         self.ground_e = {}
         for e_name in e_name_list:
             self.ground_e[e_name] = self.ground_scf_data[e_name][-1]
-        self.params, self.iterations, self.k, self.thresh_data, self.d_residuals, self.bsh_residuals, self.omega, self.full_omega = mad_reader.get_excited_result(
+        self.params, self.iterations, self.k, self.thresh_data, self.d_residuals, self.bsh_residuals, self.omega, self.full_omega,self.wall_time,self.cpu_time = mad_reader.get_excited_result(
             mol, xc)
         self.num_states = self.params["states"]
 

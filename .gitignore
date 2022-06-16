@@ -22,3 +22,7 @@ __pycache__/read_madness_json.cpython-39.pyc
 !/data_tables/
 !/lda/
 !/symmetry fun.ipynb
+.ipynb_checkpoints/post-florian-checkpoint.ipynb
+__pycache__/daltonRunner.cpython-39.pyc
+*.pyc
+*.pyc
