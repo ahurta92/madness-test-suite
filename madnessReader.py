@@ -61,10 +61,12 @@ class MadnessReader:
         kprotos = []
         iters = []
         iter_p = 0
+        num_iters_per_protocol = []
         for proto in protocol_data:
             protos.append(proto['proto'])
             kprotos.append(proto['k'])
             num_iters = proto['iter_data'].__len__()
+            num_iters_per_protocol.append(num_iters)
             proto_array = np.ones((num_iters, 1)) * proto['proto']
             kproto_array = np.ones((num_iters, 1)) * proto['k']
             omega_array = np.empty((num_iters, num_states))
@@ -86,6 +88,9 @@ class MadnessReader:
                 i += 1
                 iters.append(iter_p)
                 iter_p += 1
+            for j in range(1, num_iters_per_protocol.__len__()):
+                num_iters_per_protocol[j] = num_iters_per_protocol[j] + num_iters_per_protocol[j - 1]
+            # num_iters_per_protocol[-1] -= 1
             kproto_df = pd.DataFrame(kproto_array, columns=['k'])
             proto_df = pd.DataFrame(proto_array, columns=['thresh'])
             omega_df = pd.DataFrame(omega_array)
@@ -103,7 +108,7 @@ class MadnessReader:
         final_res = pd.concat(residual_dfs, ignore_index=True)
         final_omega = pd.concat([iters_df, final_omega], axis=1)
         final_res = pd.concat([iters_df, final_res], axis=1)
-        return final_omega, final_res
+        return final_omega, final_res, num_iters_per_protocol
 
     def __open_frequency_rbj(self, mol, xc, operator, freq):
 
@@ -149,7 +154,7 @@ class MadnessReader:
 
     def __open_excited_rbj(self, mol, xc, num_states):
 
-        print(PROOT)
+        # print(PROOT)
         moldir = PROOT + '/' + xc + '/' + mol
         dfile = "excited-" + str(num_states)
         jsonf = 'response_base.json'
@@ -176,10 +181,12 @@ class MadnessReader:
         kprotos = []
         iters = []
         iter_p = 0
+        num_iters_per_protocol = []
         for proto in protocol_data:
             protos.append(proto['proto'])
             kprotos.append(proto['k'])
             num_iters = proto['iter_data'].__len__()
+            num_iters_per_protocol.append(num_iters)
             proto_array = np.ones((num_iters, 1)) * proto['proto']
             kproto_array = np.ones((num_iters, 1)) * proto['k']
             polar_data = np.empty((num_iters, 9))
@@ -219,14 +226,14 @@ class MadnessReader:
         final_res = pd.concat(residual_dfs, ignore_index=True)
         final_polar = pd.concat([iters_df, final_polar], axis=1)
         final_res = pd.concat([iters_df, final_res], axis=1)
-        return final_polar, final_res
+        return final_polar, final_res, num_iters_per_protocol
 
     def __get_polar_data(self, rbase_j):
         num_states = rbase_j['parameters']['states']
-        freq_data, residuals = self.__read_response_protocol_data(
+        freq_data, residuals, num_iters_per_protocol = self.__read_response_protocol_data(
             rbase_j['protocol_data'], num_states)
         params = rbase_j['parameters']
-        return params, freq_data, residuals
+        return params, freq_data, residuals, num_iters_per_protocol
 
     # TODO get the ground data
     def get_polar_result(self, mol, xc, operator):
@@ -243,6 +250,7 @@ class MadnessReader:
         wall_time = {}
         cpu_time = {}
         converged = {}
+        num_iter_proto = {}
         params = None
 
         for f in freq:
@@ -252,7 +260,12 @@ class MadnessReader:
             time_data_f = rbasej["time_data"]
 
             num_states = rbasej['parameters']['states']
-            params, freq_data, residuals = self.__get_polar_data(rbasej)
+            params, freq_data, residuals, num_iters_per_protocol = self.__get_polar_data(rbasej)
+            for j in range(1, num_iters_per_protocol.__len__()):
+                num_iters_per_protocol[j] = num_iters_per_protocol[j] + num_iters_per_protocol[j - 1]
+            num_iters_per_protocol[-1] -= 1
+            num_iters_per_protocol[0] -= 1
+            num_iter_proto[str(f)] = num_iters_per_protocol
 
             fdata[str(f)] = pd.DataFrame(freq_data)
             fdata[str(f)] = freq_data.iloc[-1, :]
@@ -286,7 +299,8 @@ class MadnessReader:
             wall_time[str(f)] = pd.DataFrame(wall_time_dict)
 
         rdf = pd.DataFrame(fdata).T
-        return params, iter_data, k_data, thresh_data, d_res_data, bsh_res_data, full_freq_data, rdf, wall_time, cpu_time, pd.Series(converged)
+        return params, iter_data, k_data, thresh_data, d_res_data, bsh_res_data, full_freq_data, rdf, wall_time, cpu_time, pd.Series(
+            converged), num_iter_proto
 
     def get_excited_data(self, mol, xc):
 
@@ -294,7 +308,7 @@ class MadnessReader:
         fdata = {}
         rbasej = self.__open_excited_rbj(mol, xc, num_states)
         converged = rbasej['converged']
-        omega, residuals = self.__read_excited_proto_iter_data(
+        omega, residuals, num_iter_proto = self.__read_excited_proto_iter_data(
             rbasej['protocol_data'], num_states)
         params = rbasej['parameters']
         time_data_f = rbasej["time_data"]
@@ -312,12 +326,12 @@ class MadnessReader:
             wall_time_dict[k] = v[0]
 
         wall_time = pd.DataFrame(wall_time_dict)
-        return params, omega, residuals, wall_time, cpu_time, converged
+        return params, omega, residuals, wall_time, cpu_time, converged, num_iter_proto
 
     def get_excited_result(self, mol, xc):
 
         num_states = freq_json[mol][xc]['excited-state']
-        params, full_omega, residuals, cpu_time, wall_time, converged = self.get_excited_data(mol, xc)
+        params, full_omega, residuals, cpu_time, wall_time, converged, num_iter_proto = self.get_excited_data(mol, xc)
         iterations = residuals.iloc[:, 0:1]
         k = residuals.iloc[:, 1:2]
         thresh = residuals.iloc[:, 2:3]
@@ -325,7 +339,7 @@ class MadnessReader:
         bsh_residuals = residuals.iloc[:, (3 + num_states):]
 
         return params, iterations, k, thresh, d_residuals, bsh_residuals, full_omega.iloc[-1,
-                                                                          3:], full_omega, wall_time, cpu_time, converged
+                                                                          3:], full_omega, wall_time, cpu_time, converged, num_iter_proto
 
 
 class FrequencyData:
@@ -343,7 +357,7 @@ class FrequencyData:
         for e_name in e_name_list:
             self.ground_e[e_name] = self.ground_scf_data[e_name][-1]
         self.params, self.iter_data, self.k_data, self.thresh_data, self.d_residuals, self.bsh_residuals, \
-        self.full_polar, self.polar_df, self.wall_time, self.cpu_time,self.converged = mad_reader.get_polar_result(
+        self.full_polar, self.polar_df, self.wall_time, self.cpu_time, self.converged, self.num_iter_proto = mad_reader.get_polar_result(
             mol, xc,
             operator)
         self.num_states = self.params["states"]
@@ -491,7 +505,7 @@ class ExcitedData:
         self.ground_e = {}
         for e_name in e_name_list:
             self.ground_e[e_name] = self.ground_scf_data[e_name][-1]
-        self.params, self.iterations, self.k, self.thresh_data, self.d_residuals, self.bsh_residuals, self.omega, self.full_omega, self.wall_time, self.cpu_time, self.converged = mad_reader.get_excited_result(
+        self.params, self.iterations, self.k, self.thresh_data, self.d_residuals, self.bsh_residuals, self.omega, self.full_omega, self.wall_time, self.cpu_time, self.converged, self.num_iter_proto = mad_reader.get_excited_result(
             mol, xc)
         self.num_states = self.params["states"]
 
@@ -511,17 +525,249 @@ class ExcitedData:
         ground_compare = pd.concat(
             [ground_dalton, pd.Series(self.ground_timing, index=['wall_time']), pd.Series(self.ground_e)])
         omega_df = response_dalton.iloc[0:self.num_states]
-        omega_df['mad-omega'] = self.omega
-        omega_df['delta-omega'] = omega_df['freq'] - omega_df['mad-omega']
-        omega_df['d-residual'] = self.d_residuals.iloc[-1, :].reset_index(drop=True)
-        omega_df['bshx-residual'] = self.bsh_residuals.iloc[-1, 0:self.num_states].reset_index(drop=True)
-        omega_df['bshy-residual'] = self.bsh_residuals.iloc[-1, self.num_states::].reset_index(drop=True)
+        omega_df.loc[:, 'mad-omega'] = self.omega
+        omega_df.loc[:, 'delta-omega'] = omega_df.loc[:, 'freq'] - omega_df.loc[:, 'mad-omega']
+        omega_df.loc[:, 'd-residual'] = self.d_residuals.iloc[-1, :].reset_index(drop=True)
+        omega_df.loc[:, 'bshx-residual'] = self.bsh_residuals.iloc[-1, 0:self.num_states].reset_index(drop=True)
+        omega_df.loc[:, 'bshy-residual'] = self.bsh_residuals.iloc[-1, self.num_states::].reset_index(drop=True)
 
         return ground_compare, omega_df
 
 
 # input response_info json and returns a dict of response paramters
 # and a list of dicts of numpy arrays holding response data
+
+
+# Plotting definitions
+
+dalton_reader = DaltonRunner()
+
+
+def create_polar_table(mol, xc, basis_list, xx):
+    ground_dalton, response_dalton = dalton_reader.get_frequency_result(mol, 'hf', 'dipole', basis_list[0])
+    freq = response_dalton['frequencies']
+    g_data = {}
+    xx_data = []
+    for i in range(len(freq)):
+        xx_data.append({})
+    for basis in basis_list:
+        ground_dalton, response_dalton = dalton_reader.get_frequency_result(mol, 'hf', 'dipole', basis)
+        for i in range(len(freq)):
+            xx_data[i][basis] = response_dalton[xx][i]
+        g_data[basis] = ground_dalton['totalEnergy']
+    g_df = pd.Series(g_data)
+    g_df.name = 'Total HF Energy'
+    names = []
+    for f in freq:
+        raw_f = r'{}'.format(str(f))
+        # names.append(r'$$\alpha_{xx}('+raw_f+r')$$')
+        names.append('a(' + '{:.3f}'.format(f) + ')')
+    r_dfs = []
+    for i in range(len(freq)):
+        r_dfs.append(pd.Series(xx_data[i]))
+        r_dfs[i].name = names[i]
+    dalton_df = pd.concat([g_df] + r_dfs, axis=1)
+
+    moldata = FrequencyData(mol, 'hf', 'dipole')
+    moldata.polar_df[xx]
+    mad_data_e = {}
+    mad_data_r = {}
+    mad_data_e['Total HF Energy'] = moldata.ground_e['e_tot']
+
+    for i in range(len(names)):
+        mad_data_r[names[i]] = moldata.polar_df[xx][i]
+
+    mad_data_e = pd.Series(mad_data_e)
+    mad_data_r = pd.Series(mad_data_r)
+
+    mad_data = pd.concat([mad_data_e, mad_data_r], axis=0)
+    mad_data.name = 'MRA'
+    return dalton_df.append(mad_data)
+
+    return dalton_df
+
+
+def create_data(mol, basis_list):
+    res_dict = {'xx': 'density_residualX', 'yy': 'density_residualY', 'zz': 'density_residualZ'}
+
+    moldata = FrequencyData(mol, 'hf', 'dipole')
+    xx = ['xx', 'yy', 'zz']
+    data = []
+    for x in xx:
+        data.append(create_polar_table(mol, 'hf', basis_list, x))
+    average = (data[0] + data[1] + data[2]) / 3
+
+    diff_data = average - average.loc['MRA']
+    diff_data = diff_data.drop(index='MRA')
+
+    polar_diff = diff_data.drop('Total HF Energy', axis=1)
+
+    residuals = moldata.final_density_residuals()
+
+    cleanX = residuals['density_residualX'].reset_index().drop('index', axis=1)
+    cleanY = residuals['density_residualY'].reset_index().drop('index', axis=1)
+    cleanZ = residuals['density_residualZ'].reset_index().drop('index', axis=1)
+
+    cleanX.rename(columns={'density_residualX': 'MRA density residual'}, inplace=True)
+    cleanY.rename(columns={'density_residualY': 'MRA density residual'}, inplace=True)
+    cleanZ.rename(columns={'density_residualZ': 'MRA density residual'}, inplace=True)
+    clean = (cleanX + cleanY + cleanZ) / 3
+    clean.index = polar_diff.T.index
+
+    average = average.append(clean.T)
+    average.name = 'Average Polarizability'
+
+    energy_diff = diff_data['Total HF Energy']
+    return average, diff_data, energy_diff, polar_diff
+
+
+def create_polar_diff_plot(mol, basis_list):
+    title = mol
+    yl = r' $\Delta\alpha_{avg}$' + r' (MRA - BASIS)'
+
+    data, diff_data, energy_diff, polar_diff = create_data(mol, basis_list)
+    polar_diff.iloc[:, :].plot(marker='o', linestyle='solid')
+    plt.axhline(linewidth=2, ls='--', color='k', label="MRA Reference")
+    plt.xlabel
+    plt.legend(fontsize=12)
+    plt.xticks(fontsize=14, rotation=20)
+    plt.title(title, fontsize=20)
+    plt.ylabel(yl, fontsize=14)
+    save = mol + '-' + basis_list[0]
+    if not os.path.exists("figures"):
+        os.mkdir("figures")
+    if not os.path.exists("tables"):
+        os.mkdir("tables")
+    save = 'figures/' + save + '.svg'
+    plt.savefig(save)
+
+    latex_save = mol + '-' + basis_list[0]
+    latex_save = 'tables/' + latex_save + '.tex'
+    data = data.round(decimals=3)
+    data.to_latex(latex_save, na_rep=' ')
+
+    return data
+
+
+def get_excited_mol_series(mol, basis):
+    d = ExcitedData(mol, 'hf')
+    g, e = d.compare_dalton(basis)
+
+    mad_series = e['mad-omega']
+    dal_series = e['freq']
+    md = []
+    dd = []
+    for m in range(mad_series.size):
+        md.append('mra-{v}'.format(v=m))
+        dd.append('{b}-{v}'.format(b=basis, v=m))
+    mad_series.index = md
+    dal_series.index = dd
+    conv_series = pd.Series(d.converged)
+    conv_series.index = ['Converged']
+
+    molseries = pd.concat([conv_series, mad_series, dal_series])
+    return molseries
+
+
+def create_excited_comparison_data(basis, excluded):
+    data = {}
+    for g in glob.glob('molecules/*.mol'):
+        m = g.split('/')
+        mol = m[1].split('.')[0]
+        if mol not in excluded:
+            data[mol] = get_excited_mol_series(mol, basis)
+    excited_data = pd.DataFrame(data).round(4)
+    return excited_data
+
+
+def display_convergence_plots(mol, xc, rtype):
+    d = None
+    if rtype == 'excited':
+        d = ExcitedData(mol, xc)
+    elif rtype == 'freq':
+        d = FrequencyData(mol, xc, 'dipole')
+    xkeys = []
+    ykeys = []
+    d.num_states
+    for i in range(d.num_states):
+        xkeys.append('x' + str(i))
+        ykeys.append('y' + str(i))
+
+    dconv = d.params['dconv']
+    if rtype == 'excited':
+        d.full_omega.loc[:, 0:].plot(title='Excited-State Frequency')
+        omega_min = d.omega.iloc[0]
+        omega_max = d.omega.iloc[-1]
+        plt.vlines(d.num_iter_proto, omega_min, omega_max, colors='black', linestyle='dashed')
+
+        d.d_residuals.plot(logy=True, title='Density Residuals Excited')
+        plt.vlines(d.num_iter_proto, 0, 1, colors='black', linestyle='dashed')
+        plt.hlines(dconv, 0, d.num_iter_proto[-1], colors='black', linestyle='dashed')
+        d.bsh_residuals.loc[:, xkeys].plot(logy=True, title='BSH X Residuals Excited')
+        plt.vlines(d.num_iter_proto, 0, 1, colors='black', linestyle='dashed')
+        plt.hlines(dconv, 0, d.num_iter_proto[-1], colors='black', linestyle='dashed')
+        d.bsh_residuals.loc[:, ykeys].plot(logy=True, title='BSH Y Residuals Excited')
+        plt.vlines(d.num_iter_proto, 0, 1, colors='black', linestyle='dashed')
+        plt.hlines(dconv, 0, d.num_iter_proto[-1], colors='black', linestyle='dashed')
+
+    elif rtype == 'freq':
+
+        freqs = d.num_iter_proto.keys()
+        for f in freqs:
+            d.d_residuals[f].plot(logy=True, title='Density Residuals ' + str(f))
+            plt.vlines(d.num_iter_proto[f], 0, 1, colors='black', linestyle='dashed')
+            plt.hlines(dconv, 0, d.num_iter_proto[f][-1], colors='black', linestyle='dashed')
+            d.bsh_residuals[f].loc[:, xkeys].plot(logy=True, title='BSH X Residuals ' + str(f))
+            plt.vlines(d.num_iter_proto[f], 0, 1, colors='black', linestyle='dashed')
+            plt.hlines(dconv, 0, d.num_iter_proto[f][-1], colors='black', linestyle='dashed')
+            d.bsh_residuals[f].loc[:, ykeys].plot(logy=True, title='BSH Y Residuals ' + str(f))
+            plt.vlines(d.num_iter_proto[f], 0, 1, colors='black', linestyle='dashed')
+            plt.hlines(dconv, 0, d.num_iter_proto[f][-1], colors='black', linestyle='dashed')
+    print(mol + ' converged: ', d.converged)
+
+
+def create_polar_mol_series(mol, basis):
+    data = FrequencyData(mol, 'hf', 'dipole')
+    converged = data.converged
+    freq = pd.Series(converged.keys())
+
+    mra_keys = ['HF Energy']
+    diff_keys = [basis]
+    conv_keys = []
+    for f in range(freq.size):
+        mra_keys.append('avg_{d}'.format(d=f))
+        diff_keys.append('diff_{d}'.format(d=f))
+        conv_keys.append('converged_{d}'.format(d=f))
+
+    xx = ['xx', 'yy', 'zz']
+    data = []
+    for x in xx:
+        data.append(create_polar_table(mol, 'hf', [basis], x))
+    average = (data[0] + data[1] + data[2]) / 3
+    mra = average.loc['MRA']
+    basis_value = average.loc[basis]
+    diff = mra - basis_value
+    avg_diff = diff.mean()
+    avg_diff = pd.Series(avg_diff)
+    avg_diff.index = ['average diff']
+    mra.index = mra_keys
+    diff.index = diff_keys
+    converged.index = conv_keys
+    new = pd.concat([freq, mra, pd.Series(avg_diff), converged], axis=0)
+
+    return new
+
+
+def polar_overview(basis, excluded):
+    data = {}
+    for g in glob.glob('molecules/*.mol'):
+        m = g.split('/')
+        mol = m[1].split('.')[0]
+        print(mol)
+        if mol not in excluded:
+            data[mol] = create_polar_mol_series(mol, basis)
+
+    return pd.DataFrame(data)
 
 
 class MadRunner:
