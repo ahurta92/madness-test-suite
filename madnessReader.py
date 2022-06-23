@@ -772,26 +772,26 @@ def polar_overview(basis, excluded):
 
 class MadRunner:
 
-    def run_response(self, mol, xc, operator):
+    def run_response(self, mol, xc, operator, prec):
 
         if operator == 'dipole':
             mad_command = 'mad-freq'
         elif operator == 'excited-state':
             mad_command = 'mad-excited'
-            madnessCommand = ' '.join([mad_command, mol, xc])
         else:
             print('not implemented yet')
             return 1
-        process = subprocess.Popen(
-            madnessCommand.split(), stdout=subprocess.PIPE)
+        madnessCommand = ' '.join([mad_command, mol, xc, prec])
+
+        process = subprocess.Popen(madnessCommand.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
         return output, error
 
-    def run_madness_ground(self, mol, xc):
 
-        mad_command = 'database-moldft'
-        madnessCommand = ' '.join([mad_command, mol, xc])
-        process = subprocess.Popen(
-            madnessCommand.split(), stdout=subprocess.PIPE)
-        output, error = process.communicate()
-        return output, error
+def run_madness_ground(self, mol, xc):
+    mad_command = 'database-moldft'
+    madnessCommand = ' '.join([mad_command, mol, xc])
+    process = subprocess.Popen(
+        madnessCommand.split(), stdout=subprocess.PIPE)
+    output, error = process.communicate()
+    return output, error
