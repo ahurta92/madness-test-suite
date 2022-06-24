@@ -1,4 +1,5 @@
 import numpy as np
+import shutil
 from madnessToDaltony import *
 import os
 import sys
@@ -13,9 +14,17 @@ DALROOT += "/dalton/"
 
 
 class DaltonRunner:
-
+    @classmethod
     def __init__(self):
         # here i can change PROOT to my directory of choise
+        if shutil.which("mpirun") != None:
+            self.use_mpi = True
+            self.Np = int(os.cpu_count() / 2)
+        else:
+            self.use_mpi = False
+            self.Np = 1
+        print(self.Np)
+
         # where ever I run I can assume that the dalton directory will be one above cwd
         if not os.path.exists("dalton"):
             os.mkdir("dalton")
@@ -61,7 +70,7 @@ class DaltonRunner:
 
         dalton_inp.append('**END OF DALTON INPUT')
         dalton_inp = '\n'.join(dalton_inp)
-        run_dir = DALROOT +   xc + '/' + molname + '/' + operator
+        run_dir = DALROOT + xc + '/' + molname + '/' + operator
         if not os.path.exists(run_dir):
             os.makedirs(run_dir)
         # Here I read the madness mol file from the molecules directory
@@ -81,7 +90,10 @@ class DaltonRunner:
         # Change to run directory
         os.chdir(rdir)
         # dalton [.dal] [.mol]
-        daltonCommand = 'dalton ' + dfile + ' ' + mfile
+        if self.use_mpi:
+            daltonCommand = 'mpirun -n ' + str(self.Np) + ' dalton ' + dfile + ' ' + mfile
+        else:
+            daltonCommand = 'dalton ' + dfile + ' ' + mfile
         process = subprocess.Popen(daltonCommand.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
         os.chdir(PROOT)
@@ -198,6 +210,15 @@ class DaltonRunner:
             print(f"File {outfile} not found!", file=sys.stderr)
             print("did not find output file")
             print("Try and run molecule ", mol)
+            d_out, d_error = self.__run_dalton(run_directory, dal_input, mol_input)
+            print(d_out, d_error)
+            with open(outfile, 'r') as daltonOutput:
+                dj = daltonToJson()
+                data = self.__create_frequency_json(dj.convert(daltonOutput), basis)
+            pass
+        except IndexError as e:
+            print(f"Did not finish  {outfile} !", file=sys.stderr)
+            print(f"Retrying")
             d_out, d_error = self.__run_dalton(run_directory, dal_input, mol_input)
             print(d_out, d_error)
             with open(outfile, 'r') as daltonOutput:
