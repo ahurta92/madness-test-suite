@@ -709,7 +709,7 @@ def display_convergence_plots(mol, xc, rtype):
         plt.vlines(d.num_iter_proto, 0, 1, colors='black', linestyle='dashed')
         plt.hlines(dconv, 0, d.num_iter_proto[-1], colors='black', linestyle='dashed')
 
-    elif rtype == 'freq':
+    elif rtype == 'dipole':
 
         freqs = d.num_iter_proto.keys()
         for f in freqs:
