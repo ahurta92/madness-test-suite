@@ -684,7 +684,7 @@ def display_convergence_plots(mol, xc, rtype):
     d = None
     if rtype == 'excited':
         d = ExcitedData(mol, xc)
-    elif rtype == 'freq':
+    elif rtype == 'dipole':
         d = FrequencyData(mol, xc, 'dipole')
     xkeys = []
     ykeys = []
