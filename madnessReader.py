@@ -688,7 +688,6 @@ def display_convergence_plots(mol, xc, rtype):
         d = FrequencyData(mol, xc, 'dipole')
     xkeys = []
     ykeys = []
-    d.num_states
     for i in range(d.num_states):
         xkeys.append('x' + str(i))
         ykeys.append('y' + str(i))
