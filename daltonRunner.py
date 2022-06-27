@@ -216,6 +216,15 @@ class DaltonRunner:
                         dj = daltonToJson()
                         data = self.__create_frequency_json(dj.convert(daltonOutput), basis)
                     pass
+                except KeyError as e:
+                    print(f"Did not finish  {outfile} !", file=sys.stderr)
+                    print(f"Retrying")
+                    d_out, d_error = self.__run_dalton(run_directory, dal_input, mol_input)
+                    print(d_out, d_error)
+                    with open(outfile, 'r') as daltonOutput:
+                        dj = daltonToJson()
+                        data = self.__create_frequency_json(dj.convert(daltonOutput), basis)
+                    pass
         except FileNotFoundError as e:
             print(f"File {outfile} not found!", file=sys.stderr)
             print("did not find output file")
