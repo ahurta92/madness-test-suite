@@ -19,7 +19,8 @@ class DaltonRunner:
         # here i can change PROOT to my directory of choise
         if shutil.which("mpirun") != None:
             self.use_mpi = True
-            self.Np = int(os.cpu_count() / 2)
+            # self.Np = int(os.cpu_count() / 2)
+            self.Np = 4
         else:
             self.use_mpi = False
             self.Np = 1
