@@ -254,49 +254,55 @@ class MadnessReader:
         params = None
 
         for f in freq:
-            rbasej = self.__open_frequency_rbj(mol, xc, operator, f)
-            converged_f = rbasej["converged"]
+            try:
+                rbasej = self.__open_frequency_rbj(mol, xc, operator, f)
 
-            time_data_f = rbasej["time_data"]
+                converged_f = rbasej["converged"]
+                time_data_f = rbasej["time_data"]
+                num_states = rbasej['parameters']['states']
 
-            num_states = rbasej['parameters']['states']
-            params, freq_data, residuals, num_iters_per_protocol = self.__get_polar_data(rbasej)
-            for j in range(1, num_iters_per_protocol.__len__()):
-                num_iters_per_protocol[j] = num_iters_per_protocol[j] + num_iters_per_protocol[j - 1]
-            num_iters_per_protocol[-1] -= 1
-            num_iters_per_protocol[0] -= 1
-            num_iter_proto[str(f)] = num_iters_per_protocol
+                params, freq_data, residuals, num_iters_per_protocol = self.__get_polar_data(rbasej)
+                for j in range(1, num_iters_per_protocol.__len__()):
+                    num_iters_per_protocol[j] = num_iters_per_protocol[j] + num_iters_per_protocol[j - 1]
+                num_iters_per_protocol[-1] -= 1
+                num_iters_per_protocol[0] -= 1
+                num_iter_proto[str(f)] = num_iters_per_protocol
 
-            fdata[str(f)] = pd.DataFrame(freq_data)
-            fdata[str(f)] = freq_data.iloc[-1, :]
+                fdata[str(f)] = pd.DataFrame(freq_data)
+                fdata[str(f)] = freq_data.iloc[-1, :]
 
-            iterations = residuals.iloc[:, 0:1]
-            k = residuals.iloc[:, 1:2]
-            thresh = residuals.iloc[:, 2:3]
-            d_residuals = residuals.iloc[:, 3:(3 + num_states)]
-            bsh_residuals = residuals.iloc[:, (3 + num_states):]
+                iterations = residuals.iloc[:, 0:1]
+                k = residuals.iloc[:, 1:2]
+                thresh = residuals.iloc[:, 2:3]
+                d_residuals = residuals.iloc[:, 3:(3 + num_states)]
+                bsh_residuals = residuals.iloc[:, (3 + num_states):]
 
-            k_data[str(f)] = pd.DataFrame(k)
-            converged[str(f)] = converged_f
-            iter_data[str(f)] = pd.DataFrame(iterations)
-            thresh_data[str(f)] = pd.DataFrame(thresh)
+                k_data[str(f)] = pd.DataFrame(k)
+                converged[str(f)] = converged_f
+                iter_data[str(f)] = pd.DataFrame(iterations)
+                thresh_data[str(f)] = pd.DataFrame(thresh)
 
-            d_res_data[str(f)] = pd.DataFrame(d_residuals)
-            bsh_res_data[str(f)] = pd.DataFrame(bsh_residuals)
+                d_res_data[str(f)] = pd.DataFrame(d_residuals)
+                bsh_res_data[str(f)] = pd.DataFrame(bsh_residuals)
 
-            cpu_time_data_f = time_data_f['cpu_time']
-            wall_time_data_f = time_data_f['wall_time']
-            cpu_dict = {}
-            for k, v in cpu_time_data_f.items():
-                cpu_dict[k] = v[0]
+                cpu_time_data_f = time_data_f['cpu_time']
+                wall_time_data_f = time_data_f['wall_time']
+                cpu_dict = {}
+                for k, v in cpu_time_data_f.items():
+                    cpu_dict[k] = v[0]
 
-            cpu_time[str(f)] = pd.DataFrame(cpu_dict)
+                cpu_time[str(f)] = pd.DataFrame(cpu_dict)
 
-            wall_time_dict = {}
-            for k, v in wall_time_data_f.items():
-                wall_time_dict[k] = v[0]
+                wall_time_dict = {}
+                for k, v in wall_time_data_f.items():
+                    wall_time_dict[k] = v[0]
 
-            wall_time[str(f)] = pd.DataFrame(wall_time_dict)
+                wall_time[str(f)] = pd.DataFrame(wall_time_dict)
+            except FileNotFoundError as not_found:
+                print(f, ' not found:', not_found)
+                rdf = pd.DataFrame(fdata).T
+                return params, iter_data, k_data, thresh_data, d_res_data, bsh_res_data, full_freq_data, rdf, wall_time, cpu_time, pd.Series(
+                    converged), num_iter_proto
 
         rdf = pd.DataFrame(fdata).T
         return params, iter_data, k_data, thresh_data, d_res_data, bsh_res_data, full_freq_data, rdf, wall_time, cpu_time, pd.Series(
@@ -484,7 +490,7 @@ class FrequencyData:
         polar_df.set_index('Frequency', inplace=True)
 
         polar_df.plot(title=self.mol + ' Polarizability ' + ij_j_list)
-        plotname = 'diff_' + self.mol + '_' + basis_list[0] + '.svg'
+        plotname = 'diff_plots/' + self.mol + '_' + basis_list[0] + '.svg'
 
         plt.savefig(plotname)
 
@@ -643,7 +649,7 @@ def create_polar_diff_plot(mol, basis_list):
 
     latex_save = mol + '-' + basis_list[0]
     latex_save = 'tables/' + latex_save + '.tex'
-    data = data.round(decimals=3)
+    data = data.round(decimals=4)
     data.to_latex(latex_save, na_rep=' ')
 
     return data
@@ -680,7 +686,7 @@ def create_excited_comparison_data(basis, excluded):
     return excited_data
 
 
-def display_convergence_plots(mol, xc, rtype):
+def display_convergence_plots(mol, xc, rtype, save):
     d = None
     if rtype == 'excited':
         d = ExcitedData(mol, xc)
@@ -711,17 +717,83 @@ def display_convergence_plots(mol, xc, rtype):
 
     elif rtype == 'dipole':
 
-        freqs = d.num_iter_proto.keys()
-        for f in freqs:
-            d.d_residuals[f].plot(logy=True, title='Density Residuals ' + str(f))
-            plt.vlines(d.num_iter_proto[f], 0, 1, colors='black', linestyle='dashed')
-            plt.hlines(dconv, 0, d.num_iter_proto[f][-1], colors='black', linestyle='dashed')
-            d.bsh_residuals[f].loc[:, xkeys].plot(logy=True, title='BSH X Residuals ' + str(f))
-            plt.vlines(d.num_iter_proto[f], 0, 1, colors='black', linestyle='dashed')
-            plt.hlines(dconv, 0, d.num_iter_proto[f][-1], colors='black', linestyle='dashed')
-            d.bsh_residuals[f].loc[:, ykeys].plot(logy=True, title='BSH Y Residuals ' + str(f))
-            plt.vlines(d.num_iter_proto[f], 0, 1, colors='black', linestyle='dashed')
-            plt.hlines(dconv, 0, d.num_iter_proto[f][-1], colors='black', linestyle='dashed')
+        freqs = list(d.num_iter_proto.keys())
+        fdiv = ['0', r'$\omega_{max}/8$', r'$\omega_{max}/4$', r'$\omega_{max}/2$', r'$\omega_{max}$']
+        fig = plt.figure(constrained_layout=True, figsize=(8, 12))
+        fig.suptitle(mol + ' Residuals', fontsize=15)
+        rgb = ['r', 'g', 'b']
+        # create 3x1 subfigs
+        subfigs = fig.subfigures(nrows=len(freqs), ncols=1)
+        num_f = 0
+        for row, subfig in enumerate(subfigs):
+            f = freqs[num_f]
+            rowtitle = fdiv[num_f] + " Converged: " + str(d.converged[f])
+
+            subfig.suptitle(rowtitle, )
+            # create 1x3 subplots per subfig
+            axs = subfig.subplots(nrows=1, ncols=3)
+
+            if num_f == 0:
+                d.d_residuals[f].plot(logy=True, ax=axs[0], legend=False,
+                                      color=rgb, title='Density')
+                d.bsh_residuals[f].loc[:, xkeys].plot(logy=True, ax=axs[1], legend=False,
+                                                      color=rgb, title='BSH X')
+                d.bsh_residuals[f].loc[:, ykeys].plot(logy=True, ax=axs[2], legend=False,
+                                                      color=rgb, title='BSH Y')
+            else:
+                d.d_residuals[f].plot(logy=True, ax=axs[0], legend=False,
+                                      color=rgb)
+                d.bsh_residuals[f].loc[:, xkeys].plot(logy=True, ax=axs[1], legend=False,
+                                                      color=rgb)
+                d.bsh_residuals[f].loc[:, ykeys].plot(logy=True, ax=axs[2], legend=False,
+                                                      color=rgb)
+            max_res = max(d.d_residuals[f].max().max(), d.bsh_residuals[f].max().max())
+            for num_iter_pf in d.num_iter_proto[f]:
+                axs[0].axvline(x=num_iter_pf, ymin=0, ymax=1, c='black', linestyle='dashed')
+                axs[1].axvline(x=num_iter_pf, ymin=0, ymax=1, c='black', linestyle='dashed')
+                axs[2].axvline(x=num_iter_pf, ymin=0, ymax=1, c='black', linestyle='dashed')
+
+            axs[0].axhline(y=dconv, xmin=0, xmax=d.num_iter_proto[f][-1], c='black', linestyle='dashed')
+            axs[1].axhline(y=dconv * 5.0, xmin=0, xmax=d.num_iter_proto[f][-1], c='black', linestyle='dashed')
+            axs[2].axhline(y=dconv * 5.0, xmin=0, xmax=d.num_iter_proto[f][-1], c='black', linestyle='dashed')
+            num_f += 1
+            labels = [r'$\Delta\gamma^{(x)}$', r'$\Delta\gamma^{(y)}$', r'$\Delta\gamma_{(z)}$']
+            fig.legend(labels, loc='upper left')
+            plotname = mol + '_' + xc + '.svg'
+            if save:
+                if not os.path.exists("convergence"):
+                    os.mkdir("convergence")
+                plt.savefig('convergence/' + plotname)
+
+        # fig, axs = plt.subplots(nrows=5, ncols=3, squeeze=True, sharey=True, figsize=(9, 15))
+        # num_f = 0
+        # for f in freqs:
+
+        #    sptitle = "Residuals f= " + fdiv[num_f]
+        #    fig.suptitle(sptitle, fontsize=16)
+        #    max_res = max(d.d_residuals[f].max().max(), d.bsh_residuals[f].max().max())
+
+        #    d.d_residuals[f].plot(logy=True, title='Density $\gamma$', ax=axs[num_f, 0], legend=False,
+        #                          color=rgb)
+        #    d.bsh_residuals[f].loc[:, xkeys].plot(logy=True, title='BSH X', ax=axs[num_f, 1], legend=False,
+        #                                          color=rgb)
+        #    d.bsh_residuals[f].loc[:, ykeys].plot(logy=True, title='BSH Y', ax=axs[num_f, 2], legend=False,
+        #                                          color=rgb)
+
+        #    for num_iter_pf in d.num_iter_proto[f]:
+        #        axs[num_f, 0].axvline(x=num_iter_pf, ymin=0, ymax=max_res, c='black', linestyle='dashed')
+        #        axs[num_f, 1].axvline(x=num_iter_pf, ymin=0, ymax=max_res, c='black', linestyle='dashed')
+        #        axs[num_f, 2].axvline(x=num_iter_pf, ymin=0, ymax=max_res, c='black', linestyle='dashed')
+
+        #    axs[num_f, 0].axhline(y=dconv, xmin=0, xmax=d.num_iter_proto[f][-1], c='black', linestyle='dashed')
+        #    axs[num_f, 1].axhline(y=dconv, xmin=0, xmax=d.num_iter_proto[f][-1], c='black', linestyle='dashed')
+        #    axs[num_f, 2].axhline(y=dconv, xmin=0, xmax=d.num_iter_proto[f][-1], c='black', linestyle='dashed')
+        #    num_f += 1
+
+        #    handles, labels = axs[0, 0].get_legend_handles_labels()
+        #    labels = [r'$\Delta\gamma^{(x)}$', r'$\Delta\gamma^{(y)}$', r'$\Delta\gamma_{(z)}$']
+        #    fig.legend(handles, labels, loc='upper left')
+
     print(mol + ' converged: ', d.converged)
 
 
