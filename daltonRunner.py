@@ -24,7 +24,6 @@ class DaltonRunner:
         else:
             self.use_mpi = False
             self.Np = 1
-        print(self.Np)
 
         # where ever I run I can assume that the dalton directory will be one above cwd
         if not os.path.exists("dalton"):
