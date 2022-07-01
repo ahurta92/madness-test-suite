@@ -794,7 +794,7 @@ def display_convergence_plots(mol, xc, rtype, save):
         #    labels = [r'$\Delta\gamma^{(x)}$', r'$\Delta\gamma^{(y)}$', r'$\Delta\gamma_{(z)}$']
         #    fig.legend(handles, labels, loc='upper left')
 
-    print(mol + ' converged: ', d.converged)
+    print(mol + '\n converged: ', d.converged)
 
 
 def create_polar_mol_series(mol, basis):
