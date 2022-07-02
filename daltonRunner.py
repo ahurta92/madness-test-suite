@@ -204,28 +204,9 @@ class DaltonRunner:
         outfile = run_directory + outfile
         try:
             with open(outfile, 'r') as daltonOutput:
-                try:
-                    dj = daltonToJson()
-                    data = self.__create_frequency_json(dj.convert(daltonOutput), basis)
-                except IndexError as e:
-                    print(f"Did not finish  {outfile} !", file=sys.stderr)
-                    print(f"Retrying")
-                    d_out, d_error = self.__run_dalton(run_directory, dal_input, mol_input)
-                    print(d_out, d_error)
-                    with open(outfile, 'r') as daltonOutput:
-                        dj = daltonToJson()
-                        data = self.__create_frequency_json(dj.convert(daltonOutput), basis)
-                    pass
-                except KeyError as e:
-                    print(f"Did not finish  {outfile} !", file=sys.stderr)
-                    print(f"Retrying")
-                    d_out, d_error = self.__run_dalton(run_directory, dal_input, mol_input)
-                    print(d_out, d_error)
-                    with open(outfile, 'r') as daltonOutput:
-                        dj = daltonToJson()
-                        data = self.__create_frequency_json(dj.convert(daltonOutput), basis)
-                    pass
-        except FileNotFoundError as e:
+                dj = daltonToJson()
+                data = self.__create_frequency_json(dj.convert(daltonOutput), basis)
+        except (FileNotFoundError, KeyError, IndexError) as e:
             print(f"File {outfile} not found!", file=sys.stderr)
             print("did not find output file")
             print("Try and run molecule ", mol)
