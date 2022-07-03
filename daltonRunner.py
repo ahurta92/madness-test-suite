@@ -35,9 +35,9 @@ class DaltonRunner:
         with open(DALROOT + '/dalton-excited.json') as json_file:
             self.excited_json = json.loads(json_file.read())
 
-    def __write_polar_input(self, madmol, xc, operator, basis):
+    @staticmethod
+    def __write_polar_input(madmol, xc, operator, basis):
         """ writes the polar input to folder
-            
         """
         # DALTON INPUT
         molname = madmol.split('.')[0]
@@ -54,7 +54,7 @@ class DaltonRunner:
             dalton_inp.append(xc.capitalize())
         # RESPONSE
         dalton_inp.append('**RESPONSE')
-        # LINEAR 
+        # LINEAR
         dalton_inp.append('*LINEAR')
         # looks like it's the only option for a response calculation
         if (operator == 'dipole'):
@@ -102,7 +102,8 @@ class DaltonRunner:
         os.chdir(PROOT)
         return output, error
 
-    def __write_excited_input(self, madmol, xc, basis, num_states):
+    @staticmethod
+    def __write_excited_input(madmol, xc, basis, num_states):
         # Given a molecule, exchange correlation functional, basis an number of states
         # generates a dalton .dal file and writes it in corresponding directory
         # /dalton/[xc]/[madmol]/excited-state
@@ -149,7 +150,8 @@ class DaltonRunner:
         dalname = dal_run_file.split('/')[-1]
         return run_dir, dalname, molname
 
-    def __create_frequency_json(self, outfile, basis):
+    @staticmethod
+    def __create_frequency_json(outfile, basis):
 
         rdata = {'xx': [], 'xy': [], 'xz': [], 'yx': [], 'yy': [], 'yz': [], 'zx': [], 'zy': [], 'zz': []}
         r_dict = {}
@@ -166,7 +168,8 @@ class DaltonRunner:
 
         return {basis: {"ground": e_data, "response": r_dict}}
 
-    def __create_excited_json(self, outfile, basis):
+    @staticmethod
+    def __create_excited_json(outfile, basis):
         # generate tables given name of output files and basis_list used to generate output files
         data = {'totalEnergy': [], 'nuclearRepulsionEnergy': [], 'electronEnergy': []}
         s_dict = {}
