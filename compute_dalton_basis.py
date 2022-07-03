@@ -4,8 +4,8 @@ from daltonRunner import DaltonRunner
 mol = sys.argv[1]
 num_proc = sys.argv[2]
 
-basis_list = ['aug-cc-pVDZ', 'aug-cc-pVTZ', 'aug-cc-pVQZ', 'aug-cc-pV5Z', 'aug-cc-pV6Z']
-d_basis_list = ['d-aug-cc-pVDZ', 'd-aug-cc-pVTZ', 'd-aug-cc-pVQZ', 'd-aug-cc-pV5Z', 'd-aug-cc-pV6Z']
+basis_list = ['aug-cc-pVDZ', 'aug-cc-pVTZ', 'aug-cc-pVQZ']  # , 'aug-cc-pV5Z', 'aug-cc-pV6Z']
+d_basis_list = ['d-aug-cc-pVDZ', 'd-aug-cc-pVTZ', 'd-aug-cc-pVQZ']  # , 'd-aug-cc-pV5Z', 'd-aug-cc-pV6Z']
 
 runner = DaltonRunner()
 
