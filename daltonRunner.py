@@ -92,8 +92,10 @@ class DaltonRunner:
         # dalton [.dal] [.mol]
         if self.use_mpi:
             daltonCommand = 'mpirun -n ' + str(self.Np) + ' dalton ' + dfile + ' ' + mfile
+            print(daltonCommand)
         else:
             daltonCommand = 'dalton ' + dfile + ' ' + mfile
+            print(daltonCommand)
         process = subprocess.Popen(daltonCommand.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
         os.chdir(PROOT)
