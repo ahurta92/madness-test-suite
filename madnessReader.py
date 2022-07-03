@@ -765,35 +765,6 @@ def display_convergence_plots(mol, xc, rtype, save):
                     os.mkdir("convergence")
                 plt.savefig('convergence/' + plotname)
 
-        # fig, axs = plt.subplots(nrows=5, ncols=3, squeeze=True, sharey=True, figsize=(9, 15))
-        # num_f = 0
-        # for f in freqs:
-
-        #    sptitle = "Residuals f= " + fdiv[num_f]
-        #    fig.suptitle(sptitle, fontsize=16)
-        #    max_res = max(d.d_residuals[f].max().max(), d.bsh_residuals[f].max().max())
-
-        #    d.d_residuals[f].plot(logy=True, title='Density $\gamma$', ax=axs[num_f, 0], legend=False,
-        #                          color=rgb)
-        #    d.bsh_residuals[f].loc[:, xkeys].plot(logy=True, title='BSH X', ax=axs[num_f, 1], legend=False,
-        #                                          color=rgb)
-        #    d.bsh_residuals[f].loc[:, ykeys].plot(logy=True, title='BSH Y', ax=axs[num_f, 2], legend=False,
-        #                                          color=rgb)
-
-        #    for num_iter_pf in d.num_iter_proto[f]:
-        #        axs[num_f, 0].axvline(x=num_iter_pf, ymin=0, ymax=max_res, c='black', linestyle='dashed')
-        #        axs[num_f, 1].axvline(x=num_iter_pf, ymin=0, ymax=max_res, c='black', linestyle='dashed')
-        #        axs[num_f, 2].axvline(x=num_iter_pf, ymin=0, ymax=max_res, c='black', linestyle='dashed')
-
-        #    axs[num_f, 0].axhline(y=dconv, xmin=0, xmax=d.num_iter_proto[f][-1], c='black', linestyle='dashed')
-        #    axs[num_f, 1].axhline(y=dconv, xmin=0, xmax=d.num_iter_proto[f][-1], c='black', linestyle='dashed')
-        #    axs[num_f, 2].axhline(y=dconv, xmin=0, xmax=d.num_iter_proto[f][-1], c='black', linestyle='dashed')
-        #    num_f += 1
-
-        #    handles, labels = axs[0, 0].get_legend_handles_labels()
-        #    labels = [r'$\Delta\gamma^{(x)}$', r'$\Delta\gamma^{(y)}$', r'$\Delta\gamma_{(z)}$']
-        #    fig.legend(handles, labels, loc='upper left')
-
     print(mol + '\n converged: ', d.converged)
 
 
