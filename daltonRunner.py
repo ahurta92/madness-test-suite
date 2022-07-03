@@ -44,6 +44,7 @@ class DaltonRunner:
         dalton_inp = []
         dalton_inp.append('**DALTON INPUT')
         dalton_inp.append('.RUN RESPONSE')
+        dalton_inp.append('.DIRECT')
         dalton_inp.append('**WAVE FUNCTIONS')
         # HF or DFT
         if xc == 'hf':
