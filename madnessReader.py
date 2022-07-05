@@ -633,7 +633,7 @@ def create_polar_diff_plot(mol, basis_list):
 
     data, diff_data, energy_diff, polar_diff = create_data(mol, basis_list)
     polar_diff.iloc[:, :].plot(marker='o', linestyle='solid')
-    plt.axhline(linewidth=2, ls='--', color='k', label="MRA Reference")
+    plt.axhline(linewidth=2, ls='--', color='k')
     plt.xlabel
     plt.legend(fontsize=12)
     plt.xticks(fontsize=14, rotation=20)
