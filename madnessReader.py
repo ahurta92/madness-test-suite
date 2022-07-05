@@ -588,9 +588,9 @@ def create_polar_table(mol, xc, basis_list, xx):
 
     mad_data = pd.concat([mad_data_e, mad_data_r], axis=0)
     mad_data.name = 'MRA'
-    return dalton_df.append(mad_data)
-
-    return dalton_df
+    mad_data.key = ['MRA']
+    data = pd.concat([dalton_df.T, mad_data.T], axis=1)
+    return data.T
 
 
 def create_data(mol, basis_list):
@@ -620,7 +620,8 @@ def create_data(mol, basis_list):
     clean = (cleanX + cleanY + cleanZ) / 3
     clean.index = polar_diff.T.index
 
-    average = average.append(clean.T)
+    average = pd.concat([average, clean.T])
+
     average.name = 'Average Polarizability'
 
     energy_diff = diff_data['Total HF Energy']
@@ -650,7 +651,7 @@ def create_polar_diff_plot(mol, basis_list):
     latex_save = mol + '-' + basis_list[0]
     latex_save = 'tables/' + latex_save + '.tex'
     data = data.round(decimals=4)
-    data.to_latex(latex_save, na_rep=' ')
+    data.style.to_latex(latex_save)
 
     return data
 
