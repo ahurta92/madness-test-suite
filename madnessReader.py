@@ -9,7 +9,9 @@ import numpy as np
 import pandas as pd
 
 from madnessToDaltony import *
+from scipy.stats import norm
 
+import statistics
 
 class MadnessReader:
 
@@ -811,6 +813,35 @@ def polar_overview(basis, excluded):
             data[mol] = create_polar_mol_series(mol, basis)
 
     return pd.DataFrame(data)
+
+
+def create_basis_mol_data(basis_list, mol_list, data_dict):
+    b_data = {}
+    for b in basis_list:
+        diff_dict = {}
+        for mol in mol_list:
+            diff_m = data_dict[mol] - data_dict[mol].loc['MRA']
+            diff_dict[mol] = diff_m.loc[b]
+            diff_dict[mol].index = ['Total HF Energy', r'$\alpha(\omega_0)$', r'$\alpha(\omega_1)$',
+                                    r'$\alpha(\omega_2)$', r'$\alpha(\omega_3)$', r'$\alpha(\omega_4)$', ]
+        pdm = pd.DataFrame(diff_dict)
+        pdm.name = b
+        b_data[b] = pdm.T
+    return b_data
+
+
+def mean_and_std(basis_list, mol_list, data_dict):
+    b_data = create_basis_mol_data(basis_list, mol_list, data_dict)
+    mean_d = {}
+    std_d = {}
+    for b in basis_list:
+        mean_d[b] = b_data[b].mean()
+        std_d[b] = b_data[b].std()
+    p_mean = pd.DataFrame(mean_d)
+    p_std = pd.DataFrame(std_d)
+    return p_mean, p_std
+
+
 
 
 class MadRunner:
