@@ -29,10 +29,11 @@ class DaltonRunner:
             os.mkdir("dalton")
         with open(PROOT + '/molecules/frequency.json') as json_file:
             self.freq_json = json.loads(json_file.read())
-        with open(DALROOT + '/dalton-dipole.json') as json_file:
-            self.dipole_json = json.loads(json_file.read())
-        with open(DALROOT + '/dalton-excited.json') as json_file:
-            self.excited_json = json.loads(json_file.read())
+
+        # with open(DALROOT + '/dalton-dipole.json') as json_file:
+        #    self.dipole_json = json.loads(json_file.read())
+        # with open(DALROOT + '/dalton-excited.json') as json_file:
+        #    self.excited_json = json.loads(json_file.read())
 
     @staticmethod
     def __write_polar_input(madmol, xc, operator, basis):
