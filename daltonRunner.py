@@ -2,7 +2,6 @@ import numpy as np
 import shutil
 from madnessToDaltony import *
 import os
-import sys
 import pandas as pd
 import json
 
