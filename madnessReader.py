@@ -13,6 +13,7 @@ from scipy.stats import norm
 
 import statistics
 
+
 class MadnessReader:
 
     def __init__(self):
@@ -720,23 +721,28 @@ def display_convergence_plots(mol, xc, rtype, save):
 
     elif rtype == 'dipole':
 
-        freqs = list(d.num_iter_proto.keys())
-        fdiv = ['0', r'$\omega_{max}/8$', r'$\omega_{max}/4$', r'$\omega_{max}/2$', r'$\omega_{max}$']
+        frequencies = list(d.num_iter_proto.keys())
+        num_freq = len(frequencies)
+
+        f_labels = []
+        for i in range(num_freq):
+            f_labels.append(r'$({top}/{bot})\omega_{{max}}$]'.format(top=i, bot=8))
+
         fig = plt.figure(constrained_layout=True, figsize=(8, 12))
         fig.suptitle(mol + ' Residuals', fontsize=15)
         rgb = ['r', 'g', 'b']
         # create 3x1 subfigs
-        subfigs = fig.subfigures(nrows=len(freqs), ncols=1)
-        num_f = 0
+        subfigs = fig.subfigures(nrows=len(num_freq), ncols=1)
+        freq_i = 0
         for row, subfig in enumerate(subfigs):
-            f = freqs[num_f]
-            rowtitle = fdiv[num_f] + " Converged: " + str(d.converged[f])
+            f = frequencies[freq_i]
+            rowtitle = f_labels[freq_i] + " Converged: " + str(d.converged[f])
 
             subfig.suptitle(rowtitle, )
             # create 1x3 subplots per subfig
             axs = subfig.subplots(nrows=1, ncols=3)
 
-            if num_f == 0:
+            if freq_i == 0:
                 d.d_residuals[f].plot(logy=True, ax=axs[0], legend=False,
                                       color=rgb, title='Density')
                 d.bsh_residuals[f].loc[:, xkeys].plot(logy=True, ax=axs[1], legend=False,
@@ -759,7 +765,7 @@ def display_convergence_plots(mol, xc, rtype, save):
             axs[0].axhline(y=dconv, xmin=0, xmax=d.num_iter_proto[f][-1], c='black', linestyle='dashed')
             axs[1].axhline(y=dconv * 5.0, xmin=0, xmax=d.num_iter_proto[f][-1], c='black', linestyle='dashed')
             axs[2].axhline(y=dconv * 5.0, xmin=0, xmax=d.num_iter_proto[f][-1], c='black', linestyle='dashed')
-            num_f += 1
+            freq_i += 1
             labels = [r'$\Delta\gamma^{(x)}$', r'$\Delta\gamma^{(y)}$', r'$\Delta\gamma_{(z)}$']
             fig.legend(labels, loc='upper left')
             plotname = mol + '_' + xc + '.svg'
@@ -840,8 +846,6 @@ def mean_and_std(basis_list, mol_list, data_dict):
     p_mean = pd.DataFrame(mean_d)
     p_std = pd.DataFrame(std_d)
     return p_mean, p_std
-
-
 
 
 class MadRunner:
