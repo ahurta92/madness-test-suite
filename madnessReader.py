@@ -726,7 +726,7 @@ def display_convergence_plots(mol, xc, rtype, save):
 
         f_labels = []
         for i in range(num_freq):
-            f_labels.append(r'$[\omega=\omega_{{max}({top}/{bot})}({top}/{bot})$]'.format(top=i, bot=num_freq - 1))
+            f_labels.append(r'$[\omega=\omega_{{max}}({top}/{bot})]$'.format(top=i, bot=num_freq - 1))
 
         fig_len = 5
         fig = plt.figure(constrained_layout=True, figsize=(3 * fig_len, fig_len * num_freq))
