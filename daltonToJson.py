@@ -59,7 +59,7 @@ class daltonToJson:
             indent=2, separators=(',', ': '), ensure_ascii=False)
 
     def readScfDft(self, line, streamIn):
-        #print('READING SCF')
+        # print('READING SCF')
         self.calcSetup['numberOfElectrons'] = 0
         self.calcSetup['molecularSpinMultiplicity'] = 1
 
@@ -130,8 +130,8 @@ class daltonToJson:
     def readResponse(self, line, streamIn
                      ):
         self.calcTask['calculationType'] = 'LinearResponse'
-        #print("READING RESPONSE")
-        
+        # print("READING RESPONSE")
+
         self.xx = 0
         self.xy = 0
         self.xz = 0
@@ -143,7 +143,7 @@ class daltonToJson:
         self.zz = 0
 
         def frequencies(line):
-            #print("READING FREQ")
+            # print("READING FREQ")
 
             freq = line.split()[2:]
             num_freq = len(freq)
@@ -153,16 +153,16 @@ class daltonToJson:
             self.calcRes['secondOrderProp'] = {}
             self.calcRes['secondOrderProp']['values'] = []
 
-            self.polar_dict={}
-            self.polar_dict["xx"]=[0]*int(num_freq)
-            self.polar_dict["xy"]=[0]*int(num_freq)
-            self.polar_dict["xz"]=[0]*int(num_freq)
-            self.polar_dict["yx"]=[0]*int(num_freq)
-            self.polar_dict["yy"]=[0]*int(num_freq)
-            self.polar_dict["yz"]=[0]*int(num_freq)
-            self.polar_dict["zx"]=[0]*int(num_freq)
-            self.polar_dict["zy"]=[0]*int(num_freq)
-            self.polar_dict["zz"]=[0]*int(num_freq)
+            self.polar_dict = {}
+            self.polar_dict["xx"] = [0] * int(num_freq)
+            self.polar_dict["xy"] = [0] * int(num_freq)
+            self.polar_dict["xz"] = [0] * int(num_freq)
+            self.polar_dict["yx"] = [0] * int(num_freq)
+            self.polar_dict["yy"] = [0] * int(num_freq)
+            self.polar_dict["yz"] = [0] * int(num_freq)
+            self.polar_dict["zx"] = [0] * int(num_freq)
+            self.polar_dict["zy"] = [0] * int(num_freq)
+            self.polar_dict["zz"] = [0] * int(num_freq)
 
             # need to get the values at frequency
             for f in freq:
@@ -174,51 +174,47 @@ class daltonToJson:
             opA = lineSP[2]
             opB = lineSP[4]
 
-            opKey=' ; '.join([opA,opB])
-            
+            opKey = ' ; '.join([opA, opB])
 
             def grab_val(line):
-                return float(line[7]) 
+                return float(line[7])
 
             def grab_operator(line):
                 return ' '.join(line)[1:6]
 
-
             if opKey == "XDIPLEN ; XDIPLEN":
-                self.polar_dict['xx'][self.xx]=grab_val(lineSP)
-                self.xx+=1
+                self.polar_dict['xx'][self.xx] = grab_val(lineSP)
+                self.xx += 1
 
             elif opKey == "XDIPLEN ; YDIPLEN":
-                self.polar_dict['xy'][self.xy]=grab_val(lineSP)
-                self.xy+=1
+                self.polar_dict['xy'][self.xy] = grab_val(lineSP)
+                self.xy += 1
 
             elif opKey == "XDIPLEN ; ZDIPLEN":
-                self.polar_dict['xz'][self.xz]=grab_val(lineSP)
-                self.xz+=1
+                self.polar_dict['xz'][self.xz] = grab_val(lineSP)
+                self.xz += 1
             elif opKey == "YDIPLEN ; XDIPLEN":
-                self.polar_dict['yx'][self.yx]=grab_val(lineSP)
-                self.yx+=1
+                self.polar_dict['yx'][self.yx] = grab_val(lineSP)
+                self.yx += 1
             elif opKey == "YDIPLEN ; YDIPLEN":
-                self.polar_dict['yy'][self.yy]=grab_val(lineSP)
-                self.yy+=1
+                self.polar_dict['yy'][self.yy] = grab_val(lineSP)
+                self.yy += 1
             elif opKey == "YDIPLEN ; ZDIPLEN":
-                self.polar_dict['yz'][self.yz]=grab_val(lineSP)
-                self.yz+=1
+                self.polar_dict['yz'][self.yz] = grab_val(lineSP)
+                self.yz += 1
             elif opKey == "ZDIPLEN ; XDIPLEN":
-                self.polar_dict['zx'][self.zx]=grab_val(lineSP)
-                self.zx+=1
+                self.polar_dict['zx'][self.zx] = grab_val(lineSP)
+                self.zx += 1
             elif opKey == "ZDIPLEN ; YDIPLEN":
-                self.polar_dict['zy'][self.zy]=grab_val(lineSP)
-                self.zy+=1
+                self.polar_dict['zy'][self.zy] = grab_val(lineSP)
+                self.zy += 1
             elif opKey == "ZDIPLEN ; ZDIPLEN":
-                self.polar_dict['zz'][self.zz]=grab_val(lineSP)
-                self.zz+=1
-
+                self.polar_dict['zz'][self.zz] = grab_val(lineSP)
+                self.zz += 1
 
         scfInp = OrderedDict([
             ('B-frequencies', frequencies),
-            ('>> =', secondOrderProp,),])
-
+            ('>> =', secondOrderProp,), ])
 
         # if the line matches to one of these inputs we will take the line
         line = streamIn.readline()
@@ -239,7 +235,7 @@ class daltonToJson:
         self.calculations.append(self.calcTask)
 
     def readExcited(self, line, streamIn):
-        #print("READING RESPONSE")
+        # print("READING RESPONSE")
         self.calcTask['calculationType'] = 'SingletExcitationEnergy'
         # if the line matches to one of these inputs we will take the line
         line = streamIn.readline()
