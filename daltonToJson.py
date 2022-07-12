@@ -10,6 +10,7 @@ from matplotlib.pyplot import polar
 class daltonToJson:
 
     def __init__(self):
+        self.polar_dict = None
         self.calcSetup = {}
         self.calcRes = {}
         self.calcTask = {}
@@ -146,23 +147,16 @@ class daltonToJson:
             # print("READING FREQ")
 
             freq = line.split()[2:]
-            num_freq = len(freq)
+            num_freq = int(line.split()[0])
             self.calcSetup['frequencies'] = []
             self.calcSetup['numFrequencies'] = int(num_freq)
             # empty list of size 3
             self.calcRes['secondOrderProp'] = {}
             self.calcRes['secondOrderProp']['values'] = []
 
-            self.polar_dict = {}
-            self.polar_dict["xx"] = [0] * int(num_freq)
-            self.polar_dict["xy"] = [0] * int(num_freq)
-            self.polar_dict["xz"] = [0] * int(num_freq)
-            self.polar_dict["yx"] = [0] * int(num_freq)
-            self.polar_dict["yy"] = [0] * int(num_freq)
-            self.polar_dict["yz"] = [0] * int(num_freq)
-            self.polar_dict["zx"] = [0] * int(num_freq)
-            self.polar_dict["zy"] = [0] * int(num_freq)
-            self.polar_dict["zz"] = [0] * int(num_freq)
+            self.polar_dict = {"xx": [0] * int(num_freq), "xy": [0] * int(num_freq), "xz": [0] * int(num_freq),
+                               "yx": [0] * int(num_freq), "yy": [0] * int(num_freq), "yz": [0] * int(num_freq),
+                               "zx": [0] * int(num_freq), "zy": [0] * int(num_freq), "zz": [0] * int(num_freq)}
 
             # need to get the values at frequency
             for f in freq:

@@ -239,7 +239,7 @@ class DaltonRunner:
             print("did not find output file")
             print("Try and run molecule ", mol)
             d_out, d_error = self.__run_dalton(run_directory, dal_input, mol_input)
-            print(d_out, d_error)
+            #print(d_out, d_error)
             with open(outfile, 'r') as daltonOutput:
                 dj = daltonToJson()
                 data = self.__create_excited_json(dj.convert(daltonOutput), basis)
