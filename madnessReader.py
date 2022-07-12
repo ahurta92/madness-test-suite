@@ -726,9 +726,10 @@ def display_convergence_plots(mol, xc, rtype, save):
 
         f_labels = []
         for i in range(num_freq):
-            f_labels.append(r'$({top}/{bot})\omega_{{max}}$]'.format(top=i, bot=8))
+            f_labels.append(r'$[\omega=\omega_{{max}({top}/{bot})}({top}/{bot})$]'.format(top=i, bot=num_freq - 1))
 
-        fig = plt.figure(constrained_layout=True, figsize=(8, 12))
+        fig_len = 5
+        fig = plt.figure(constrained_layout=True, figsize=(3 * fig_len, fig_len * num_freq))
         fig.suptitle(mol + ' Residuals', fontsize=15)
         rgb = ['r', 'g', 'b']
         # create 3x1 subfigs
