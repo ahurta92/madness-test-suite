@@ -732,7 +732,7 @@ def display_convergence_plots(mol, xc, rtype, save):
         fig.suptitle(mol + ' Residuals', fontsize=15)
         rgb = ['r', 'g', 'b']
         # create 3x1 subfigs
-        subfigs = fig.subfigures(nrows=len(num_freq), ncols=1)
+        subfigs = fig.subfigures(nrows=len(frequencies), ncols=1)
         freq_i = 0
         for row, subfig in enumerate(subfigs):
             f = frequencies[freq_i]
