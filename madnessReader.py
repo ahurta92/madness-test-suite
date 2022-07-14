@@ -265,10 +265,12 @@ class MadnessReader:
                 num_states = rbasej['parameters']['states']
 
                 params, freq_data, residuals, num_iters_per_protocol = self.__get_polar_data(rbasej)
-                for j in range(1, num_iters_per_protocol.__len__()):
-                    num_iters_per_protocol[j] = num_iters_per_protocol[j] + num_iters_per_protocol[j - 1]
-                num_iters_per_protocol[-1] -= 1
-                num_iters_per_protocol[0] -= 1
+                # for j in range(0, num_iters_per_protocol.__len__()):
+                #    num_iters_per_protocol[j] += 1
+
+                # for j in range(1, num_iters_per_protocol.__len__()):
+                #    num_iters_per_protocol[j] = num_iters_per_protocol[j] + num_iters_per_protocol[j - 1]
+
                 num_iter_proto[str(f)] = num_iters_per_protocol
 
                 fdata[str(f)] = pd.DataFrame(freq_data)
@@ -286,7 +288,11 @@ class MadnessReader:
                 thresh_data[str(f)] = pd.DataFrame(thresh)
 
                 d_res_data[str(f)] = pd.DataFrame(d_residuals)
+                total_iters = sum(num_iters_per_protocol)
+                d_res_data[str(f)].index = [str(i) for i in range(1, total_iters + 1)]
+
                 bsh_res_data[str(f)] = pd.DataFrame(bsh_residuals)
+                bsh_res_data[str(f)].index = [str(i) for i in range(1, total_iters + 1)]
 
                 cpu_time_data_f = time_data_f['cpu_time']
                 wall_time_data_f = time_data_f['wall_time']
@@ -696,6 +702,7 @@ def display_convergence_plots(mol, xc, rtype, save):
         d = ExcitedData(mol, xc)
     elif rtype == 'dipole':
         d = FrequencyData(mol, xc, 'dipole')
+
     xkeys = []
     ykeys = []
     for i in range(d.num_states):
@@ -721,15 +728,21 @@ def display_convergence_plots(mol, xc, rtype, save):
 
     elif rtype == 'dipole':
 
+        mad_read = MadnessReader()
+        freq = mad_read.freq_json[mol][xc][rtype]
+        num_freqs = len(freq)
+        num_converged = len(d.num_iter_proto.keys())
         frequencies = list(d.num_iter_proto.keys())
-        num_freq = len(frequencies)
+
+        print('number of frequencies: ', num_freqs)
+        print('number of frequencies converged: ', num_converged)
 
         f_labels = []
-        for i in range(num_freq):
-            f_labels.append(r'$[\omega=\omega_{{max}}({top}/{bot})]$'.format(top=i, bot=num_freq - 1))
+        for i in range(num_converged):
+            f_labels.append(r'$[\omega=\omega_{{max}}({top}/{bot})]$'.format(top=i, bot=num_freqs - 1))
 
         fig_len = 5
-        fig = plt.figure(constrained_layout=True, figsize=(3 * fig_len, fig_len * num_freq))
+        fig = plt.figure(constrained_layout=True, figsize=(3 * fig_len, fig_len * num_converged))
         fig.suptitle(mol + ' Residuals', fontsize=15)
         rgb = ['r', 'g', 'b']
         # create 3x1 subfigs
@@ -742,30 +755,45 @@ def display_convergence_plots(mol, xc, rtype, save):
             subfig.suptitle(rowtitle, )
             # create 1x3 subplots per subfig
             axs = subfig.subplots(nrows=1, ncols=3)
-
             if freq_i == 0:
                 d.d_residuals[f].plot(logy=True, ax=axs[0], legend=False,
-                                      color=rgb, title='Density')
+                                      color=rgb, title='Density', marker='*', grid=True)
                 d.bsh_residuals[f].loc[:, xkeys].plot(logy=True, ax=axs[1], legend=False,
-                                                      color=rgb, title='BSH X')
+                                                      color=rgb, title='BSH X', marker='*', grid=True)
                 d.bsh_residuals[f].loc[:, ykeys].plot(logy=True, ax=axs[2], legend=False,
-                                                      color=rgb, title='BSH Y')
+                                                      color=rgb, title='BSH Y', marker='*', grid=True)
             else:
                 d.d_residuals[f].plot(logy=True, ax=axs[0], legend=False,
-                                      color=rgb)
+                                      color=rgb, marker='*', grid=True)
                 d.bsh_residuals[f].loc[:, xkeys].plot(logy=True, ax=axs[1], legend=False,
-                                                      color=rgb)
+                                                      color=rgb, marker='*', grid=True)
                 d.bsh_residuals[f].loc[:, ykeys].plot(logy=True, ax=axs[2], legend=False,
-                                                      color=rgb)
-            max_res = max(d.d_residuals[f].max().max(), d.bsh_residuals[f].max().max())
-            for num_iter_pf in d.num_iter_proto[f]:
+                                                      color=rgb, marker='*', grid=True)
+            iters = d.num_iter_proto[f]
+            print(iters)
+            for j in range(1, iters.__len__()):
+                iters[j] = iters[j] + iters[j - 1]
+            for j in range(0, iters.__len__()):
+                if iters[j] != 1:
+                    iters[j] -= 1
+            print(iters)
+
+            for num_iter_pf in iters:
                 axs[0].axvline(x=num_iter_pf, ymin=0, ymax=1, c='black', linestyle='dashed')
                 axs[1].axvline(x=num_iter_pf, ymin=0, ymax=1, c='black', linestyle='dashed')
                 axs[2].axvline(x=num_iter_pf, ymin=0, ymax=1, c='black', linestyle='dashed')
 
-            axs[0].axhline(y=dconv, xmin=0, xmax=d.num_iter_proto[f][-1], c='black', linestyle='dashed')
-            axs[1].axhline(y=dconv * 5.0, xmin=0, xmax=d.num_iter_proto[f][-1], c='black', linestyle='dashed')
-            axs[2].axhline(y=dconv * 5.0, xmin=0, xmax=d.num_iter_proto[f][-1], c='black', linestyle='dashed')
+            for i in range(3):
+                axs[i].axhline(y=dconv, xmin=0, xmax=d.num_iter_proto[f][-1], c='black', linestyle='dashed')
+                axs[i].grid(which="both")
+                axs[i].minorticks_on()
+                axs[i].tick_params(which='both',  # Options for both major and minor ticks
+                               top='on',  # turn off top ticks
+                               left='on',  # turn off left ticks
+                               right='on',  # turn off right ticks
+                               bottom='on')
+
+
             freq_i += 1
             labels = [r'$\Delta\gamma^{(x)}$', r'$\Delta\gamma^{(y)}$', r'$\Delta\gamma_{(z)}$']
             fig.legend(labels, loc='upper left')
@@ -776,10 +804,12 @@ def display_convergence_plots(mol, xc, rtype, save):
                 plt.savefig('convergence/' + plotname)
 
     print(mol + '\n converged: ', d.converged)
+    return d
 
 
 def create_polar_mol_series(mol, basis):
     data = FrequencyData(mol, 'hf', 'dipole')
+
     converged = data.converged
     freq = pd.Series(converged.keys())
 
