@@ -876,10 +876,8 @@ def display_convergence_plots(mol, xc, rtype, save):
         num_freqs = len(freq)
         num_converged = len(d.num_iter_proto.keys())
         frequencies = list(d.num_iter_proto.keys())
-
         print("number of frequencies: ", num_freqs)
         print("number of frequencies converged: ", num_converged)
-
         f_labels = []
         for i in range(num_converged):
             f_labels.append(
@@ -887,7 +885,6 @@ def display_convergence_plots(mol, xc, rtype, save):
                     top=i, bot=num_freqs - 1
                 )
             )
-
         fig_len = 5
         fig = plt.figure(
             constrained_layout=True, figsize=(3 * fig_len, fig_len * num_converged)
@@ -947,7 +944,6 @@ def display_convergence_plots(mol, xc, rtype, save):
                 axs[2].axvline(
                     x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
                 )
-
             for i in range(3):
                 axs[i].axhline(
                     y=dconv,
@@ -965,21 +961,18 @@ def display_convergence_plots(mol, xc, rtype, save):
                     right="on",  # turn off right ticks
                     bottom="on",
                 )
-
-            freq_i += 1
             labels = [
                 r"$\Delta\gamma^{(x)}$",
                 r"$\Delta\gamma^{(y)}$",
                 r"$\Delta\gamma_{(z)}$",
             ]
             fig.legend(labels, loc="upper left")
-
         else:
             freq_i = 0
             for row, subfig in enumerate(subfigs):
+                print(freq_i)
                 f = frequencies[freq_i]
                 rowtitle = f_labels[freq_i] + " Converged: " + str(d.converged[f])
-
                 subfig.suptitle(
                     rowtitle,
                 )
@@ -1013,51 +1006,6 @@ def display_convergence_plots(mol, xc, rtype, save):
                         marker="*",
                         grid=True,
                     )
-                    iters = d.num_iter_proto[f]
-                    print(iters)
-                    for j in range(1, iters.__len__()):
-                        iters[j] = iters[j] + iters[j - 1]
-                    for j in range(0, iters.__len__()):
-                        if iters[j] != 1:
-                            iters[j] -= 1
-                    print(iters)
-
-                    for num_iter_pf in iters:
-                        axs[0].axvline(
-                            x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
-                        )
-                        axs[1].axvline(
-                            x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
-                        )
-                        axs[2].axvline(
-                            x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
-                        )
-
-                    for i in range(3):
-                        axs[i].axhline(
-                            y=dconv,
-                            xmin=0,
-                            xmax=d.num_iter_proto[f][-1],
-                            c="black",
-                            linestyle="dashed",
-                        )
-                        axs[i].grid(which="both")
-                        axs[i].minorticks_on()
-                        axs[i].tick_params(
-                            which="both",  # Options for both major and minor ticks
-                            top="on",  # turn off top ticks
-                            left="on",  # turn off left ticks
-                            right="on",  # turn off right ticks
-                            bottom="on",
-                        )
-
-                    freq_i += 1
-                    labels = [
-                        r"$\Delta\gamma^{(x)}$",
-                        r"$\Delta\gamma^{(y)}$",
-                        r"$\Delta\gamma_{(z)}$",
-                    ]
-                    fig.legend(labels, loc="upper left")
                 else:
                     d.d_residuals[f].plot(
                         logy=True,
