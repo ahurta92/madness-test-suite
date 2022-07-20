@@ -975,6 +975,7 @@ def display_convergence_plots(mol, xc, rtype, save):
             fig.legend(labels, loc="upper left")
 
         else:
+            freq_i = 0
             for row, subfig in enumerate(subfigs):
                 f = frequencies[freq_i]
                 rowtitle = f_labels[freq_i] + " Converged: " + str(d.converged[f])
