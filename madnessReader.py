@@ -895,18 +895,12 @@ def display_convergence_plots(mol, xc, rtype, save):
         fig.suptitle(mol + " Residuals", fontsize=15)
         rgb = ["r", "g", "b"]
         # create 3x1 subfigs
-        subfigs = fig.subfigures(nrows=max(len(frequencies), 2), ncols=1)
+        subfigs = fig.subfigures(nrows=len(frequencies), ncols=1)
         freq_i = 0
-        for row, subfig in enumerate(subfigs):
-            f = frequencies[freq_i]
-            rowtitle = f_labels[freq_i] + " Converged: " + str(d.converged[f])
-
-            subfig.suptitle(
-                rowtitle,
-            )
-            # create 1x3 subplots per subfig
-            axs = subfig.subplots(nrows=1, ncols=3)
+        if len(frequencies) == 1:
             if freq_i == 0:
+                f = frequencies[freq_i]
+                axs = subfigs.subplots(nrows=1, ncols=3)
                 d.d_residuals[f].plot(
                     logy=True,
                     ax=axs[0],
@@ -934,67 +928,166 @@ def display_convergence_plots(mol, xc, rtype, save):
                     marker="*",
                     grid=True,
                 )
-            else:
-                d.d_residuals[f].plot(
-                    logy=True, ax=axs[0], legend=False, color=rgb, marker="*", grid=True
-                )
-                d.bsh_residuals[f].loc[:, xkeys].plot(
-                    logy=True, ax=axs[1], legend=False, color=rgb, marker="*", grid=True
-                )
-                d.bsh_residuals[f].loc[:, ykeys].plot(
-                    logy=True, ax=axs[2], legend=False, color=rgb, marker="*", grid=True
-                )
-            iters = d.num_iter_proto[f]
-            print(iters)
-            for j in range(1, iters.__len__()):
-                iters[j] = iters[j] + iters[j - 1]
-            for j in range(0, iters.__len__()):
-                if iters[j] != 1:
-                    iters[j] -= 1
-            print(iters)
 
-            for num_iter_pf in iters:
-                axs[0].axvline(
-                    x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
-                )
-                axs[1].axvline(
-                    x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
-                )
-                axs[2].axvline(
-                    x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
-                )
+        else:
+            for row, subfig in enumerate(subfigs):
+                f = frequencies[freq_i]
+                rowtitle = f_labels[freq_i] + " Converged: " + str(d.converged[f])
 
-            for i in range(3):
-                axs[i].axhline(
-                    y=dconv,
-                    xmin=0,
-                    xmax=d.num_iter_proto[f][-1],
-                    c="black",
-                    linestyle="dashed",
+                subfig.suptitle(
+                    rowtitle,
                 )
-                axs[i].grid(which="both")
-                axs[i].minorticks_on()
-                axs[i].tick_params(
-                    which="both",  # Options for both major and minor ticks
-                    top="on",  # turn off top ticks
-                    left="on",  # turn off left ticks
-                    right="on",  # turn off right ticks
-                    bottom="on",
-                )
+                # create 1x3 subplots per subfig
+                axs = subfig.subplots(nrows=1, ncols=3)
+                if freq_i == 0:
+                    d.d_residuals[f].plot(
+                        logy=True,
+                        ax=axs[0],
+                        legend=False,
+                        color=rgb,
+                        title="Density",
+                        marker="*",
+                        grid=True,
+                    )
+                    d.bsh_residuals[f].loc[:, xkeys].plot(
+                        logy=True,
+                        ax=axs[1],
+                        legend=False,
+                        color=rgb,
+                        title="BSH X",
+                        marker="*",
+                        grid=True,
+                    )
+                    d.bsh_residuals[f].loc[:, ykeys].plot(
+                        logy=True,
+                        ax=axs[2],
+                        legend=False,
+                        color=rgb,
+                        title="BSH Y",
+                        marker="*",
+                        grid=True,
+                    )
+                    iters = d.num_iter_proto[f]
+                    print(iters)
+                    for j in range(1, iters.__len__()):
+                        iters[j] = iters[j] + iters[j - 1]
+                    for j in range(0, iters.__len__()):
+                        if iters[j] != 1:
+                            iters[j] -= 1
+                    print(iters)
 
-            freq_i += 1
-            labels = [
-                r"$\Delta\gamma^{(x)}$",
-                r"$\Delta\gamma^{(y)}$",
-                r"$\Delta\gamma_{(z)}$",
-            ]
-            fig.legend(labels, loc="upper left")
-            plotname = mol + "_" + xc + ".svg"
-            if save:
-                if not os.path.exists("convergence"):
-                    os.mkdir("convergence")
-                plt.savefig("convergence/" + plotname)
+                    for num_iter_pf in iters:
+                        axs[0].axvline(
+                            x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
+                        )
+                        axs[1].axvline(
+                            x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
+                        )
+                        axs[2].axvline(
+                            x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
+                        )
 
+                    for i in range(3):
+                        axs[i].axhline(
+                            y=dconv,
+                            xmin=0,
+                            xmax=d.num_iter_proto[f][-1],
+                            c="black",
+                            linestyle="dashed",
+                        )
+                        axs[i].grid(which="both")
+                        axs[i].minorticks_on()
+                        axs[i].tick_params(
+                            which="both",  # Options for both major and minor ticks
+                            top="on",  # turn off top ticks
+                            left="on",  # turn off left ticks
+                            right="on",  # turn off right ticks
+                            bottom="on",
+                        )
+
+                    freq_i += 1
+                    labels = [
+                        r"$\Delta\gamma^{(x)}$",
+                        r"$\Delta\gamma^{(y)}$",
+                        r"$\Delta\gamma_{(z)}$",
+                    ]
+                    fig.legend(labels, loc="upper left")
+                else:
+                    d.d_residuals[f].plot(
+                        logy=True,
+                        ax=axs[0],
+                        legend=False,
+                        color=rgb,
+                        marker="*",
+                        grid=True,
+                    )
+                    d.bsh_residuals[f].loc[:, xkeys].plot(
+                        logy=True,
+                        ax=axs[1],
+                        legend=False,
+                        color=rgb,
+                        marker="*",
+                        grid=True,
+                    )
+                    d.bsh_residuals[f].loc[:, ykeys].plot(
+                        logy=True,
+                        ax=axs[2],
+                        legend=False,
+                        color=rgb,
+                        marker="*",
+                        grid=True,
+                    )
+                iters = d.num_iter_proto[f]
+                print(iters)
+                for j in range(1, iters.__len__()):
+                    iters[j] = iters[j] + iters[j - 1]
+                for j in range(0, iters.__len__()):
+                    if iters[j] != 1:
+                        iters[j] -= 1
+                print(iters)
+
+                for num_iter_pf in iters:
+                    axs[0].axvline(
+                        x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
+                    )
+                    axs[1].axvline(
+                        x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
+                    )
+                    axs[2].axvline(
+                        x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
+                    )
+
+                for i in range(3):
+                    axs[i].axhline(
+                        y=dconv,
+                        xmin=0,
+                        xmax=d.num_iter_proto[f][-1],
+                        c="black",
+                        linestyle="dashed",
+                    )
+                    axs[i].grid(which="both")
+                    axs[i].minorticks_on()
+                    axs[i].tick_params(
+                        which="both",  # Options for both major and minor ticks
+                        top="on",  # turn off top ticks
+                        left="on",  # turn off left ticks
+                        right="on",  # turn off right ticks
+                        bottom="on",
+                    )
+
+                freq_i += 1
+                labels = [
+                    r"$\Delta\gamma^{(x)}$",
+                    r"$\Delta\gamma^{(y)}$",
+                    r"$\Delta\gamma_{(z)}$",
+                ]
+                fig.legend(labels, loc="upper left")
+
+    plotname = mol + "_" + xc + ".svg"
+    if save:
+        if not os.path.exists("convergence"):
+            os.mkdir("convergence")
+        plt.savefig("convergence/" + plotname)
     print(mol + "\n converged: ", d.converged)
     return d
 
