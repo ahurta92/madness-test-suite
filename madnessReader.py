@@ -95,7 +95,7 @@ class MadnessReader:
                 iter_p += 1
             for j in range(1, num_iters_per_protocol.__len__()):
                 num_iters_per_protocol[j] = (
-                    num_iters_per_protocol[j] + num_iters_per_protocol[j - 1]
+                        num_iters_per_protocol[j] + num_iters_per_protocol[j - 1]
                 )
             # num_iters_per_protocol[-1] -= 1
             kproto_df = pd.DataFrame(kproto_array, columns=["k"])
@@ -185,6 +185,10 @@ class MadnessReader:
             ycol.append("y" + str(i))
         polar_dfs = []
         residual_dfs = []
+
+        bsh_norms_dfs = []
+        d_norms_dfs = []
+
         protos = []
         kprotos = []
         iters = []
@@ -201,6 +205,11 @@ class MadnessReader:
             dres = np.empty((num_iters, num_states))
             xres = np.empty((num_iters, num_states))
             yres = np.empty((num_iters, num_states))
+
+            chi_x_norms = np.empty((num_iters, 3))
+            chi_y_norms = np.empty((num_iters, 3))
+            rho_norms = np.empty((num_iters, 3))
+
             i = 0
             for iter in proto["iter_data"]:
                 # diagonalize the polarizability
@@ -209,9 +218,15 @@ class MadnessReader:
                 # w, v = LA.eig(alpha)
                 # print("alpha : ",alpha)
                 polar_data[i, :] = alpha
+
                 dres[i, :] = self.__tensor_to_numpy(iter["density_residuals"]).flatten()
                 xres[i, :] = self.__tensor_to_numpy(iter["res_X"]).flatten()
                 yres[i, :] = self.__tensor_to_numpy(iter["res_Y"]).flatten()
+
+                chi_x_norms[i, :] = self.__tensor_to_numpy(iter["chi_norms_x"]).flatten()
+                chi_y_norms[i, :] = self.__tensor_to_numpy(iter["chi_norms_y"]).flatten()
+                rho_norms[i, :] = self.__tensor_to_numpy(iter["rho_norms"]).flatten()
+
                 i += 1
                 iters.append(iter_p)
                 iter_p += 1
@@ -225,18 +240,32 @@ class MadnessReader:
             dres_df = pd.DataFrame(dres, columns=dcol)
             xres_df = pd.DataFrame(xres, columns=xcol)
             yres_df = pd.DataFrame(yres, columns=ycol)
+
+            rho_norms_df = pd.DataFrame(rho_norms, columns=dcol)
+
+            chi_x_norms_df = pd.DataFrame(chi_x_norms, columns=xcol)
+            chi_y_norms_df = pd.DataFrame(chi_y_norms, columns=ycol)
+
+            bsh_norms_df = pd.concat([chi_x_norms_df, chi_y_norms_df], axis=1)
+
             residuals_df = pd.concat(
                 [kproto_df, proto_df, dres_df, xres_df, yres_df], axis=1
             )
             polar_dfs.append(polar_df)
             residual_dfs.append(residuals_df)
 
+            d_norms_dfs.append(rho_norms_df)
+            bsh_norms_dfs.append(bsh_norms_df)
+
         iters_df = pd.DataFrame(iters, columns=["iterations"])
         final_polar = pd.concat(polar_dfs, ignore_index=True)
         final_res = pd.concat(residual_dfs, ignore_index=True)
         final_polar = pd.concat([iters_df, final_polar], axis=1)
         final_res = pd.concat([iters_df, final_res], axis=1)
-        return final_polar, final_res, num_iters_per_protocol
+        final_d_norms = pd.concat(d_norms_dfs, ignore_index=True)
+        final_bsh_norms = pd.concat(bsh_norms_dfs, ignore_index=True)
+
+        return final_polar, final_res, num_iters_per_protocol, final_d_norms, final_bsh_norms
 
     def __get_polar_data(self, rbase_j):
         num_states = rbase_j["parameters"]["states"]
@@ -244,9 +273,12 @@ class MadnessReader:
             freq_data,
             residuals,
             num_iters_per_protocol,
+            d_norms_df,
+            bsh_norms_df
+
         ) = self.__read_response_protocol_data(rbase_j["protocol_data"], num_states)
         params = rbase_j["parameters"]
-        return params, freq_data, residuals, num_iters_per_protocol
+        return params, freq_data, residuals, num_iters_per_protocol, d_norms_df, bsh_norms_df
 
     # TODO get the ground data
     def get_polar_result(self, mol, xc, operator):
@@ -260,6 +292,10 @@ class MadnessReader:
         iter_data = {}
         d_res_data = {}
         bsh_res_data = {}
+
+        d_norms_data = {}
+        bsh_norms_data = {}
+
         wall_time = {}
         cpu_time = {}
         converged = {}
@@ -279,6 +315,8 @@ class MadnessReader:
                     freq_data,
                     residuals,
                     num_iters_per_protocol,
+                    d_norms_df,
+                    bsh_norms_df
                 ) = self.__get_polar_data(rbasej)
                 # for j in range(0, num_iters_per_protocol.__len__()):
                 #    num_iters_per_protocol[j] += 1
@@ -294,13 +332,16 @@ class MadnessReader:
                 iterations = residuals.iloc[:, 0:1]
                 k = residuals.iloc[:, 1:2]
                 thresh = residuals.iloc[:, 2:3]
-                d_residuals = residuals.iloc[:, 3 : (3 + num_states)]
-                bsh_residuals = residuals.iloc[:, (3 + num_states) :]
+                d_residuals = residuals.iloc[:, 3: (3 + num_states)]
+                bsh_residuals = residuals.iloc[:, (3 + num_states):]
 
                 k_data[str(f)] = pd.DataFrame(k)
                 converged[str(f)] = converged_f
                 iter_data[str(f)] = pd.DataFrame(iterations)
                 thresh_data[str(f)] = pd.DataFrame(thresh)
+
+                d_norms_data[str(f)] = pd.DataFrame(d_norms_df)
+                bsh_norms_data[str(f)] = pd.DataFrame(bsh_norms_df)
 
                 d_res_data[str(f)] = pd.DataFrame(d_residuals)
                 total_iters = sum(num_iters_per_protocol)
@@ -338,6 +379,8 @@ class MadnessReader:
                     cpu_time,
                     pd.Series(converged),
                     num_iter_proto,
+                    d_norms_data,
+                    bsh_norms_data
                 )
 
         rdf = pd.DataFrame(fdata).T
@@ -354,6 +397,8 @@ class MadnessReader:
             cpu_time,
             pd.Series(converged),
             num_iter_proto,
+            d_norms_data,
+            bsh_norms_data
         )
 
     def get_excited_data(self, mol, xc):
@@ -398,8 +443,8 @@ class MadnessReader:
         iterations = residuals.iloc[:, 0:1]
         k = residuals.iloc[:, 1:2]
         thresh = residuals.iloc[:, 2:3]
-        d_residuals = residuals.iloc[:, 3 : (3 + num_states)]
-        bsh_residuals = residuals.iloc[:, (3 + num_states) :]
+        d_residuals = residuals.iloc[:, 3: (3 + num_states)]
+        bsh_residuals = residuals.iloc[:, (3 + num_states):]
 
         return (
             params,
@@ -447,6 +492,8 @@ class FrequencyData:
             self.cpu_time,
             self.converged,
             self.num_iter_proto,
+            self.d_norms,
+            self.bsh_norms
         ) = mad_reader.get_polar_result(mol, xc, operator)
         self.num_states = self.params["states"]
 
@@ -664,20 +711,20 @@ class ExcitedData:
                 pd.Series(self.ground_e),
             ]
         )
-        omega_df = response_dalton.iloc[0 : self.num_states]
+        omega_df = response_dalton.iloc[0: self.num_states]
         omega_df.loc[:, "mad-omega"] = self.omega
         omega_df.loc[:, "delta-omega"] = (
-            omega_df.loc[:, "freq"] - omega_df.loc[:, "mad-omega"]
+                omega_df.loc[:, "freq"] - omega_df.loc[:, "mad-omega"]
         )
         omega_df.loc[:, "d-residual"] = self.d_residuals.iloc[-1, :].reset_index(
             drop=True
         )
         omega_df.loc[:, "bshx-residual"] = self.bsh_residuals.iloc[
-            -1, 0 : self.num_states
-        ].reset_index(drop=True)
+                                           -1, 0: self.num_states
+                                           ].reset_index(drop=True)
         omega_df.loc[:, "bshy-residual"] = self.bsh_residuals.iloc[
-            -1, self.num_states : :
-        ].reset_index(drop=True)
+                                           -1, self.num_states::
+                                           ].reset_index(drop=True)
 
         return ground_compare, omega_df
 
@@ -783,9 +830,10 @@ def create_polar_diff_plot(mol, basis_list):
     yl = r" $\Delta\alpha_{avg}$" + r" (MRA - BASIS)"
 
     data, diff_data, energy_diff, polar_diff = create_data(mol, basis_list)
-    polar_diff.iloc[:, :].plot(marker="o", linestyle="solid")
+    num_freq = len(list(polar_diff.keys()))
+    polar_diff.iloc[:, :].plot(marker="v", linestyle="solid", markersize=12, linewidth=2, colormap='plasma')
+
     plt.axhline(linewidth=2, ls="--", color="k")
-    plt.xlabel
     plt.legend(fontsize=12)
     plt.xticks(fontsize=14, rotation=20)
     plt.title(title, fontsize=20)
@@ -1076,6 +1124,198 @@ def display_convergence_plots(mol, xc, rtype, save):
                     r"$\Delta\gamma_{(z)}$",
                 ]
                 fig.legend(labels, loc="upper left")
+
+    plotname = mol + "_" + xc + ".svg"
+    if save:
+        if not os.path.exists("convergence"):
+            os.mkdir("convergence")
+        plt.savefig("convergence/" + plotname)
+    print(mol + "\n converged: ", d.converged)
+    return d
+
+
+def frequency_norm_plots(mol, xc, rtype, save):
+    d = FrequencyData(mol, xc, rtype)
+    xkeys = []
+    ykeys = []
+    for i in range(d.num_states):
+        xkeys.append("x" + str(i))
+        ykeys.append("y" + str(i))
+
+    dconv = d.params["dconv"]
+
+    mad_read = MadnessReader()
+
+    freq = mad_read.freq_json[mol][xc][rtype]
+    num_freqs = len(freq)
+    num_converged = len(d.num_iter_proto.keys())
+    frequencies = list(d.num_iter_proto.keys())
+    print("number of frequencies: ", num_freqs)
+    print("number of frequencies converged: ", num_converged)
+    f_labels = []
+    for i in range(num_converged):
+        f_labels.append(
+            r"$[\omega=\omega_{{max}}({top}/{bot})]$".format(
+                top=i, bot=num_freqs - 1
+            )
+        )
+    fig_len = 5
+    fig = plt.figure(
+        constrained_layout=True, figsize=(3 * fig_len, fig_len * num_converged)
+    )
+    fig.suptitle(mol + " Residuals", fontsize=15)
+    rgb = ["r", "g", "b"]
+    # create 3x1 subfigs
+    subfigs = fig.subfigures(nrows=len(frequencies), ncols=1)
+    freq_i = 0
+    if len(frequencies) == 1:
+        if freq_i == 0:
+            f = frequencies[freq_i]
+            axs = subfigs.subplots(nrows=1, ncols=3)
+            d.d_norms[f].plot(
+                logy=True,
+                ax=axs[0],
+                legend=False,
+                color=rgb,
+                title="Density",
+                marker="*",
+                grid=True,
+            )
+            d.bsh_norms[f].loc[:, xkeys].plot(
+                logy=True,
+                ax=axs[1],
+                legend=False,
+                color=rgb,
+                title="BSH X",
+                marker="*",
+                grid=True,
+            )
+            d.bsh_norms[f].loc[:, ykeys].plot(
+                logy=True,
+                ax=axs[2],
+                legend=False,
+                color=rgb,
+                title="BSH Y",
+                marker="*",
+                grid=True,
+            )
+        iters = d.num_iter_proto[f]
+        print(iters)
+        for j in range(1, iters.__len__()):
+            iters[j] = iters[j] + iters[j - 1]
+        for j in range(0, iters.__len__()):
+            if iters[j] != 1:
+                iters[j] -= 1
+        print(iters)
+
+        for num_iter_pf in iters:
+            axs[0].axvline(
+                x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
+            )
+            axs[1].axvline(
+                x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
+            )
+            axs[2].axvline(
+                x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
+            )
+        labels = [
+            r"$\Delta\gamma^{(x)}$",
+            r"$\Delta\gamma^{(y)}$",
+            r"$\Delta\gamma_{(z)}$",
+        ]
+        fig.legend(labels, loc="upper left")
+    else:
+        freq_i = 0
+        for row, subfig in enumerate(subfigs):
+            print(freq_i)
+            f = frequencies[freq_i]
+            rowtitle = f_labels[freq_i] + " Converged: " + str(d.converged[f])
+            subfig.suptitle(
+                rowtitle,
+            )
+            # create 1x3 subplots per subfig
+            axs = subfig.subplots(nrows=1, ncols=3)
+            if freq_i == 0:
+                d.d_norms[f].plot(
+                    logy=True,
+                    ax=axs[0],
+                    legend=False,
+                    color=rgb,
+                    title="Density",
+                    marker="*",
+                    grid=True,
+                )
+                d.bsh_norms[f].loc[:, xkeys].plot(
+                    logy=True,
+                    ax=axs[1],
+                    legend=False,
+                    color=rgb,
+                    title="BSH X",
+                    marker="*",
+                    grid=True,
+                )
+                d.bsh_norms[f].loc[:, ykeys].plot(
+                    logy=True,
+                    ax=axs[2],
+                    legend=False,
+                    color=rgb,
+                    title="BSH Y",
+                    marker="*",
+                    grid=True,
+                )
+            else:
+                d.d_norms[f].plot(
+                    logy=True,
+                    ax=axs[0],
+                    legend=False,
+                    color=rgb,
+                    marker="*",
+                    grid=True,
+                )
+                d.bsh_norms[f].loc[:, xkeys].plot(
+                    logy=True,
+                    ax=axs[1],
+                    legend=False,
+                    color=rgb,
+                    marker="*",
+                    grid=True,
+                )
+                d.bsh_norms[f].loc[:, ykeys].plot(
+                    logy=True,
+                    ax=axs[2],
+                    legend=False,
+                    color=rgb,
+                    marker="*",
+                    grid=True,
+                )
+            iters = d.num_iter_proto[f]
+            print(iters)
+            for j in range(1, iters.__len__()):
+                iters[j] = iters[j] + iters[j - 1]
+            for j in range(0, iters.__len__()):
+                if iters[j] != 1:
+                    iters[j] -= 1
+            print(iters)
+
+            for num_iter_pf in iters:
+                axs[0].axvline(
+                    x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
+                )
+                axs[1].axvline(
+                    x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
+                )
+                axs[2].axvline(
+                    x=num_iter_pf, ymin=0, ymax=1, c="black", linestyle="dashed"
+                )
+
+
+            freq_i += 1
+            labels = [
+                r"$\gamma^{(x)}$",
+                r"$\gamma^{(y)}$",
+                r"$\gamma_{(z)}$",
+            ]
+            fig.legend(labels, loc="upper left")
 
     plotname = mol + "_" + xc + ".svg"
     if save:
