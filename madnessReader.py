@@ -1325,7 +1325,7 @@ def frequency_norm_plots(mol, xc, rtype, save):
     return d
 
 
-def w01_convergence_plots(mol, xc, rtype, f_list, save):
+def w01_convergence_plots(mol, xc, rtype, save):
     d = None
     if rtype == "dipole":
         d = FrequencyData(mol, xc, "dipole")
