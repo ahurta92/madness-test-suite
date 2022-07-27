@@ -1163,7 +1163,7 @@ def frequency_norm_plots(mol, xc, rtype, save):
     fig = plt.figure(
         constrained_layout=True, figsize=(3 * fig_len, fig_len * num_converged)
     )
-    fig.suptitle(mol + " Residuals", fontsize=15)
+    fig.suptitle(mol + " Norm", fontsize=15)
     rgb = ["r", "g", "b"]
     # create 3x1 subfigs
     subfigs = fig.subfigures(nrows=len(frequencies), ncols=1)
