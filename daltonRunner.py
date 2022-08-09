@@ -239,9 +239,9 @@ class DaltonRunner:
     def get_excited_json(self, mol, xc, basis):
         """get the json output given mol xc and basis"""
         num_states = freq_json[mol][xc]["excited-state"]
-        run_directory, dal_input, mol_input = self.__write_excited_input(
-            mol, xc, basis, num_states
-        )
+        run_directory, dal_input, mol_input = self.__write_excited_input(self,
+                                                                         mol, xc, basis, num_states
+                                                                         )
         # First look for the output file and try and convert it to a json
         outfile = "/excited_" + "-".join([mol, basis]) + ".out"
         outfile = run_directory + outfile
