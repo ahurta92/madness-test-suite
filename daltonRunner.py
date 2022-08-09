@@ -7,14 +7,16 @@ import json
 
 from daltonToJson import daltonToJson
 
-PROOT = os.getcwd()
-DALROOT = os.path.join(PROOT, os.pardir)
-DALROOT += "/dalton/"
-
 
 class DaltonRunner:
+    DALROOT = None
+
     @classmethod
     def __init__(self):
+
+        self.PROOT = os.getcwd()
+        self.DALROOT = os.path.join(PROOT, os.pardir)
+        self.DALROOT += "/dalton/"
         # here i can change PROOT to my directory of choise
         if shutil.which("mpirun") != None:
             self.use_mpi = True
@@ -35,7 +37,7 @@ class DaltonRunner:
         #    self.excited_json = json.loads(json_file.read())
 
     @staticmethod
-    def __write_polar_input(madmol, xc, operator, basis):
+    def __write_polar_input(self, madmol, xc, operator, basis):
         """writes the polar input to folder"""
         # DALTON INPUT
         molname = madmol.split(".")[0]
@@ -69,11 +71,11 @@ class DaltonRunner:
 
         dalton_inp.append("**END OF DALTON INPUT")
         dalton_inp = "\n".join(dalton_inp)
-        run_dir = DALROOT + xc + "/" + molname + "/" + operator
+        run_dir = self.DALROOT + xc + "/" + molname + "/" + operator
         if not os.path.exists(run_dir):
             os.makedirs(run_dir)
         # Here I read the madness mol file from the molecules directory
-        madmolfile = PROOT + "/molecules/" + madmol + ".mol"
+        madmolfile = self.PROOT + "/molecules/" + madmol + ".mol"
         mol_input = madmol_to_dalmol(madmolfile, basis)
         dal_run_file = run_dir + "/freq.dal"
         with open(dal_run_file, "w") as file:  # Use file to refer to the file object
@@ -99,11 +101,11 @@ class DaltonRunner:
             print(daltonCommand)
         process = subprocess.Popen(daltonCommand.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
-        os.chdir(PROOT)
+        os.chdir(self.PROOT)
         return output, error
 
     @staticmethod
-    def __write_excited_input(madmol, xc, basis, num_states):
+    def __write_excited_input(self, madmol, xc, basis, num_states):
         # Given a molecule, exchange correlation functional, basis an number of states
         # generates a dalton .dal file and writes it in corresponding directory
         # /dalton/[xc]/[madmol]/excited-state
@@ -133,10 +135,10 @@ class DaltonRunner:
 
         dalton_inp.append("**END OF DALTON INPUT")
         dalton_inp = "\n".join(dalton_inp)
-        run_dir = DALROOT + xc + "/" + molname + "/" + "excited-state"
+        run_dir = self.DALROOT + xc + "/" + molname + "/" + "excited-state"
         if not os.path.exists(run_dir):
             os.makedirs(run_dir)
-        madmolfile = PROOT + "/molecules/" + madmol + ".mol"
+        madmolfile = self.PROOT + "/molecules/" + madmol + ".mol"
         if basis.split("-")[-1] == "uc":
             mol_input = madmol_to_dalmol(madmolfile, "".join(basis.split("-")[:-1]))
 
