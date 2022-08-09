@@ -91,7 +91,7 @@ class DaltonRunner:
         # dalton [.dal] [.mol]
         if self.use_mpi:
             daltonCommand = (
-                "mpirun -n " + str(self.Np) + " dalton " + dfile + " " + mfile
+                    "mpirun -n " + str(self.Np) + " dalton " + dfile + " " + mfile
             )
             print(daltonCommand)
         else:
@@ -111,6 +111,7 @@ class DaltonRunner:
         dalton_inp = []
         dalton_inp.append("**DALTON INPUT")
         dalton_inp.append(".RUN PROPERTIES")
+        dalton_inp.append(".DIRECT")
         if basis.split("-")[-1] == "uc":
             dalton_inp.append("*MOLBAS ")
             dalton_inp.append(".UNCONT ")
@@ -132,7 +133,7 @@ class DaltonRunner:
 
         dalton_inp.append("**END OF DALTON INPUT")
         dalton_inp = "\n".join(dalton_inp)
-        run_dir = DALROOT + "/dalton/" + xc + "/" + molname + "/" + "excited-state"
+        run_dir = DALROOT + xc + "/" + molname + "/" + "excited-state"
         if not os.path.exists(run_dir):
             os.makedirs(run_dir)
         madmolfile = PROOT + "/molecules/" + madmol + ".mol"
