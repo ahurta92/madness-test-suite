@@ -216,9 +216,9 @@ class DaltonRunner:
         return {basis: {"ground": e_data, "response": s_dict}}
 
     def get_polar_json(self, mol, xc, operator, basis):
-        run_directory, dal_input, mol_input = self.__write_polar_input(
-            mol, xc, operator, basis
-        )
+        run_directory, dal_input, mol_input = self.__write_polar_input(self,
+                                                                       mol, xc, operator, basis
+                                                                       )
         outfile = "/freq_" + "-".join([mol, basis]) + ".out"
         outfile = run_directory + outfile
         try:
