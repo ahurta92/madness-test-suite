@@ -158,7 +158,7 @@ class MadnessReader:
         scf_e_data = j["scf_e_data"]
         timing = j["wall_time"]
 
-        return params, scf_e_data, timing
+        return params, scf_e_data, timing, j
 
     def __open_excited_rbj(self, mol, xc, num_states):
 
@@ -301,10 +301,12 @@ class MadnessReader:
         converged = {}
         num_iter_proto = {}
         params = None
+        full_response_base = {}
 
         for f in freq:
             try:
                 rbasej = self.__open_frequency_rbj(mol, xc, operator, f)
+                full_response_base[f] = rbasej
 
                 converged_f = rbasej["converged"]
                 time_data_f = rbasej["time_data"]
@@ -380,7 +382,9 @@ class MadnessReader:
                     pd.Series(converged),
                     num_iter_proto,
                     d_norms_data,
-                    bsh_norms_data
+                    bsh_norms_data,
+                    full_response_base
+
                 )
 
         rdf = pd.DataFrame(fdata).T
@@ -398,7 +402,8 @@ class MadnessReader:
             pd.Series(converged),
             num_iter_proto,
             d_norms_data,
-            bsh_norms_data
+            bsh_norms_data,
+            full_response_base
         )
 
     def get_excited_data(self, mol, xc):
@@ -464,6 +469,8 @@ class MadnessReader:
 
 class FrequencyData:
     def __init__(self, mol, xc, operator):
+        self.response_base = {}
+        self.calc_info = None
         self.dalton_data = {}
         self.mol = mol
         self.xc = xc
@@ -474,6 +481,7 @@ class FrequencyData:
             self.ground_params,
             self.ground_scf_data,
             self.ground_timing,
+            self.calc_info,
         ) = mad_reader.get_ground_scf_data(mol, xc)
         e_name_list = ["e_coulomb", "e_kinetic", "e_local", "e_nrep", "e_tot"]
         self.ground_e = {}
@@ -493,7 +501,9 @@ class FrequencyData:
             self.converged,
             self.num_iter_proto,
             self.d_norms,
-            self.bsh_norms
+            self.bsh_norms,
+            self.response_base
+
         ) = mad_reader.get_polar_result(mol, xc, operator)
         self.num_states = self.params["states"]
 
@@ -826,15 +836,19 @@ def create_data(mol, basis_list):
 
 
 def create_polar_diff_plot(mol, basis_list):
-    title = mol
+    title = 'Basis Set Convergence: ' + mol
     yl = r" $\Delta\alpha_{avg}$" + r" (MRA - BASIS)"
 
     data, diff_data, energy_diff, polar_diff = create_data(mol, basis_list)
     num_freq = len(list(polar_diff.keys()))
     polar_diff.iloc[:, :].plot(marker="v", linestyle="solid", markersize=12, linewidth=2, colormap='plasma')
 
+    legend = []
+    for i in range(num_freq):
+        legend.append(r'$\omega({})$'.format(i))
+
     plt.axhline(linewidth=2, ls="--", color="k")
-    plt.legend(fontsize=12)
+    plt.legend(legend, fontsize=12)
     plt.xticks(fontsize=14, rotation=20)
     plt.title(title, fontsize=20)
     plt.ylabel(yl, fontsize=14)
