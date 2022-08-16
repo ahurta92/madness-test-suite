@@ -215,6 +215,19 @@ class DaltonRunner:
 
         return {basis: {"ground": e_data, "response": s_dict}}
 
+    def polar_json_exists(self, mol, xc, operator, basis):
+
+        run_directory, dal_input, mol_input = self.__write_polar_input(self,
+                                                                       mol, xc, operator, basis
+                                                                       )
+        outfile = "/freq_" + "-".join([mol, basis]) + ".out"
+        outfile = run_directory + outfile
+        try:
+            with open(outfile, "r") as daltonOutput:
+                return True
+        except (FileNotFoundError, KeyError, IndexError) as e:
+            return False
+
     def get_polar_json(self, mol, xc, operator, basis):
         run_directory, dal_input, mol_input = self.__write_polar_input(self,
                                                                        mol, xc, operator, basis
