@@ -1,11 +1,14 @@
-import sys
+from madnessReader import *
 from daltonRunner import DaltonRunner
+
+os.chdir("/gpfs/projects/rjh/adrian/post_watoc/august/")
+
 
 mol = sys.argv[1]
 num_proc = sys.argv[2]
 
-basis_list = ['aug-cc-pVDZ', 'aug-cc-pVTZ', 'aug-cc-pVQZ']  # , 'aug-cc-pV5Z', 'aug-cc-pV6Z']
-d_basis_list = ['d-aug-cc-pVDZ', 'd-aug-cc-pVTZ', 'd-aug-cc-pVQZ']  # , 'd-aug-cc-pV5Z', 'd-aug-cc-pV6Z']
+basis_list = ['aug-cc-pCVDZ', 'aug-cc-pCVTZ', 'aug-cc-pCVQZ']  # , 'aug-cc-pV5Z', 'aug-cc-pV6Z']
+d_basis_list = ['d-aug-cc-pVCDZ', 'd-aug-cc-pCVTZ', 'd-aug-cc-pCVQZ']  # , 'd-aug-cc-pV5Z', 'd-aug-cc-pV6Z']
 
 runner = DaltonRunner()
 
@@ -14,7 +17,8 @@ runner.Np = num_proc
 for basis in basis_list + d_basis_list:
     try:
         result = runner.get_polar_json(mol, 'hf', 'dipole', basis)
-        print(result[basis]['response']['frequencies'])
-        print(result[basis]['response']['values']['xx'])
     except:
         pass
+
+
+
