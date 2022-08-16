@@ -1,7 +1,8 @@
+import os
+os.chdir("/gpfs/projects/rjh/adrian/post_watoc/august/")
 from madnessReader import *
 from daltonRunner import DaltonRunner
 
-os.chdir("/gpfs/projects/rjh/adrian/post_watoc/august/")
 
 
 mol = sys.argv[1]
