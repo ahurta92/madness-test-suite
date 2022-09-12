@@ -1015,7 +1015,7 @@ def freq_norm_and_residual(mol, xc, op, save):
                 os.mkdir("convergence/" + mol)
             if not os.path.exists('convergence/' + mol + '/' + xc):
                 os.mkdir("convergence/" + mol + '/' + xc)
-        plt.savefig("convergence/" + mol + '/' + xc + '/' + plotname)
+            plt.savefig("convergence/" + mol + '/' + xc + '/' + plotname)
     print(mol + "\n converged: ", d.converged)
 
 
