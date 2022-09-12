@@ -249,8 +249,10 @@ class DaltonRunner:
             pass
         return data
 
-    def get_excited_json(self, mol, xc, basis):
-        """get the json output given mol xc and basis"""
+    def get_excited_json(self, mol, xc, basis, run):
+        """get the json output given mol xc and basis
+        :param run:
+        """
         num_states = freq_json[mol][xc]["excited-state"]
         run_directory, dal_input, mol_input = self.__write_excited_input(self,
                                                                          mol, xc, basis, num_states
@@ -258,59 +260,69 @@ class DaltonRunner:
         # First look for the output file and try and convert it to a json
         outfile = "/excited_" + "-".join([mol, basis]) + ".out"
         outfile = run_directory + outfile
+        data = None
         try:
             # open the output file
             with open(outfile, "r") as daltonOutput:
                 dj = daltonToJson()
                 data = self.__create_excited_json(dj.convert(daltonOutput), basis)
         except:
+
             print("did not find output file")
-            print("Try and run molecule ", mol)
-            d_out, d_error = self.__run_dalton(run_directory, dal_input, mol_input)
-            # print(d_out, d_error)
-            with open(outfile, "r") as daltonOutput:
-                dj = daltonToJson()
-                data = self.__create_excited_json(dj.convert(daltonOutput), basis)
-            pass
+            if run:
+
+                print("Try and run molecule ", mol)
+                d_out, d_error = self.__run_dalton(run_directory, dal_input, mol_input)
+                # print(d_out, d_error)
+                with open(outfile, "r") as daltonOutput:
+                    dj = daltonToJson()
+                    data = self.__create_excited_json(dj.convert(daltonOutput), basis)
+                pass
+            else:
+                print("Not trying to run dalton for ", mol)
+                pass
         return data
 
-    def get_excited_result(self, mol, xc, basis):
+    def get_excited_result(self, mol, xc, basis, run):
 
-        excited_j = self.get_excited_json(mol, xc, basis)
+        excited_j = self.get_excited_json(mol, xc, basis, run)
+        if excited_j is not None:
 
-        time = excited_j[basis]["ground"]["calculationTime"]
-        results = excited_j[basis]["ground"]["calculationResults"]
-        gR = {}
-        gR["basis"] = basis
-        # results
-        gkeys = ["totalEnergy", "nuclearRepulsionEnergy", "electronEnergy"]
-        for g in gkeys:
-            gR[g] = float(results[g]["value"])
-        # timings
-        tkeys = ["cpuTime", "wallTime"]
+            time = excited_j[basis]["ground"]["calculationTime"]
+            results = excited_j[basis]["ground"]["calculationResults"]
+            gR = {}
+            gR["basis"] = basis
+            # results
+            gkeys = ["totalEnergy", "nuclearRepulsionEnergy", "electronEnergy"]
+            for g in gkeys:
+                gR[g] = float(results[g]["value"])
+            # timings
+            tkeys = ["cpuTime", "wallTime"]
 
-        for t in tkeys:
-            gR["g" + t] = float(time[t])
-        rtime = excited_j[basis]["response"]["calculationTime"]
-        for t in tkeys:
-            gR["r" + t] = float(rtime[t])
+            for t in tkeys:
+                gR["g" + t] = float(time[t])
+            rtime = excited_j[basis]["response"]["calculationTime"]
+            for t in tkeys:
+                gR["r" + t] = float(rtime[t])
 
-        # number of electrons
-        skeys = ["numberOfElectrons"]
-        setup = excited_j[basis]["ground"]["calculationSetup"]
-        for s in skeys:
-            gR[s] = setup[s]
+            # number of electrons
+            skeys = ["numberOfElectrons"]
+            setup = excited_j[basis]["ground"]["calculationSetup"]
+            for s in skeys:
+                gR[s] = setup[s]
 
-        gSeries = pd.Series(gR)
-        rresults = excited_j[basis]["response"]
-        ekeys = ["Sym", "Mode", "freq"]
+            gSeries = pd.Series(gR)
+            rresults = excited_j[basis]["response"]
+            ekeys = ["Sym", "Mode", "freq"]
 
-        rR = {}
-        for e in ekeys:
-            rR[e] = rresults[e]
-        rDf = pd.DataFrame.from_dict(rR)
+            rR = {}
+            for e in ekeys:
+                rR[e] = rresults[e]
+            rDf = pd.DataFrame.from_dict(rR)
 
-        return gSeries, rDf
+            return gSeries, rDf
+        else:
+            return None
 
     def get_frequency_result(self, mol, xc, operator, basis):
 
