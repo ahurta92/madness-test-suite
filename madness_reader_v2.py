@@ -633,9 +633,7 @@ class ExcitedData:
 
     def compare_dalton(self, basis):
         dalton_reader = DaltonRunner()
-        ground_dalton, response_dalton = dalton_reader.get_excited_result(
-            self.mol, self.xc, basis
-        )
+        ground_dalton, response_dalton = dalton_reader.get_excited_result(self.mol, self.xc, basis, True)
 
         ground_compare = pd.concat(
             [
