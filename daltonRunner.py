@@ -90,12 +90,13 @@ class DaltonRunner:
         return run_dir, dalname, molname
 
     def __run_dalton(self, rdir, dfile, mfile):
+        dalton = shutil.which('dalton')
         # Change to run directory
         os.chdir(rdir)
         # dalton [.dal] [.mol]
         if self.use_mpi:
             daltonCommand = (
-                    "mpirun -n " + str(self.Np) + " dalton " + dfile + " " + mfile
+                    "mpirun -n " + str(self.Np) + " "+dalton +" "+ dfile + " " + mfile
             )
             print(daltonCommand)
         else:
