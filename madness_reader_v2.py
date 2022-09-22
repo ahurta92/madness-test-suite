@@ -331,7 +331,7 @@ class MadnessReader:
         last_polar_freq = {}
         function_data = {}
 
-        wall_time = {}
+        time_data = {}
 
         converged = {}
         num_iter_proto = {}
@@ -343,7 +343,7 @@ class MadnessReader:
 
         for f in freq:
             try:
-                # print("Frequency : ", f)
+                print("Frequency : ", f)
                 rbasej = self.__open_frequency_rbj(mol, xc, operator, f)
                 full_response_base[str(f)] = rbasej
                 converged_f = rbasej["converged"]
@@ -360,13 +360,13 @@ class MadnessReader:
                 # fdata[str(f)] = full_function_data.iloc[-1, :]
                 converged[str(f)] = converged_f
 
-                wall_time_data_f = rbasej["wall_time"]
+                time_data[str(f)] = rbasej["time_data"]
 
             except FileNotFoundError as not_found:
                 print(f, " not found:", not_found)
                 return (
                     full_params,
-                    wall_time,
+                    time_data,
                     pd.Series(converged),
                     num_iter_proto,
                     full_response_base,
@@ -377,7 +377,7 @@ class MadnessReader:
 
         return (
             full_params,
-            wall_time,
+            time_data,
             pd.Series(converged),
             num_iter_proto,
             full_response_base,
@@ -440,7 +440,7 @@ class FrequencyData:
             self.ground_e[e_name] = self.ground_scf_data[e_name][-1]
         (
             self.params,
-            self.wall_time,
+            self.time_data,
             self.converged,
             self.num_iter_proto,
             self.response_base,
@@ -450,6 +450,38 @@ class FrequencyData:
         ) = mad_reader.get_polar_result(mol, xc, operator)
         self.num_states = self.params['0.0']["states"]
         self.num_orbitals = self.params['0.0']["num_orbitals"]
+
+    def get_function_keys(self):
+        x_keys = []
+        ax_keys = []
+        rx_keys = []
+
+        d_keys = []
+        ad_keys = []
+
+        for i in range(self.num_states):
+            x_keys.append("X" + str(i))
+            ax_keys.append("abs_X" + str(i))
+            rx_keys.append("rel_X" + str(i))
+
+            d_keys.append("D" + str(i))
+            ad_keys.append("abs_D" + str(i))
+
+        xij_keys = []
+        axij_keys = []
+
+        for i in range(self.num_states):
+            for j in range(self.num_orbitals):
+                xij_keys.append('x' + str(i) + str(j))
+                axij_keys.append('abs_x' + str(i) + str(j))
+
+        for i in range(self.num_states):
+            for j in range(self.num_orbitals):
+                xij_keys.append('y' + str(i) + str(j))
+                axij_keys.append('abs_y' + str(i) + str(j))
+
+        return {"x_norms": x_keys, "x_abs_error": ax_keys, "x_rel_error": rx_keys, "d_norms": d_keys,
+                "d_abs_error": ad_keys, "xij_norms": xij_keys, "xij_abs_error": axij_keys}
 
     def create_basis_table(self, basis_list, xx):
         ground_dalton, response_dalton = dalton_reader.get_frequency_result(
@@ -558,10 +590,13 @@ class FrequencyData:
         bsh_residuals_i = self.function_data[f_key][abs_keys]
         rel_residuals_i = self.function_data[f_key][rel_keys]
 
-        chi_norms_i.plot(ax=ax[0], logy=False, legend=True, colormap='magma', title='Chi Norms', marker='*', grid=True)
-        bsh_residuals_i.plot(ax=ax[1], logy=True, legend=True, colormap='magma', title='Absolute Residuals', marker='*',
+        chi_norms_i.plot(ax=ax[0], logy=False, legend=True, colormap='Accent', title='Chi Norms', marker='*',
+                         markersize=12, grid=True)
+        bsh_residuals_i.plot(ax=ax[1], logy=True, legend=True, colormap='Accent', title='Absolute Residuals',
+                             marker='*', markersize=12,
                              grid=True)
-        rel_residuals_i.plot(ax=ax[2], logy=True, legend=True, colormap='magma', title='Relative Residuals', marker='*',
+        rel_residuals_i.plot(ax=ax[2], logy=True, legend=True, colormap='Accent', title='Relative Residuals',
+                             marker='*', markersize=12,
                              grid=True)
 
         iters = self.num_iter_proto[f_key]
