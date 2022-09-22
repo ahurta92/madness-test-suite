@@ -96,7 +96,7 @@ class DaltonRunner:
         # dalton [.dal] [.mol]
         if self.use_mpi:
             daltonCommand = (
-                    "mpirun -n " + str(self.Np) + " "+dalton +" "+ dfile + " " + mfile
+                    dalton+" -N " + str(self.Np) + " " + dfile + " " + mfile
             )
             print(daltonCommand)
         else:
