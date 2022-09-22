@@ -1,6 +1,8 @@
+import subprocess
+
 import numpy as np
 import shutil
-from madnessToDaltony import *
+from madnessToDaltony import madmol_to_dalmol
 import os
 import pandas as pd
 import json
@@ -15,7 +17,7 @@ class DaltonRunner:
     def __init__(self):
 
         self.PROOT = os.getcwd()
-        self.DALROOT = os.path.join(PROOT, os.pardir)
+        self.DALROOT = os.path.join(self.PROOT, os.pardir)
         self.DALROOT += "/dalton/"
         # here i can change PROOT to my directory of choise
         if shutil.which("mpirun") != None:
@@ -28,7 +30,7 @@ class DaltonRunner:
         # where ever I run I can assume that the dalton directory will be one above cwd
         if not os.path.exists("dalton"):
             os.mkdir("dalton")
-        with open(PROOT + "/molecules/frequency.json") as json_file:
+        with open(self.PROOT + "/molecules/frequency.json") as json_file:
             self.freq_json = json.loads(json_file.read())
 
         # with open(DALROOT + '/dalton-dipole.json') as json_file:
@@ -59,7 +61,7 @@ class DaltonRunner:
         # looks like it's the only option for a response calculation
         if operator == "dipole":
             dalton_inp.append(".DIPLEN")
-            freq = freq_json[molname][xc][operator]
+            freq = self.freq_json[molname][xc][operator]
             num_freq = len(freq)
             dalton_inp.append(".FREQUENCIES")
             dalton_inp.append(str(num_freq))
@@ -253,7 +255,7 @@ class DaltonRunner:
         """get the json output given mol xc and basis
         :param run:
         """
-        num_states = freq_json[mol][xc]["excited-state"]
+        num_states = self.freq_json[mol][xc]["excited-state"]
         run_directory, dal_input, mol_input = self.__write_excited_input(self,
                                                                          mol, xc, basis, num_states
                                                                          )
