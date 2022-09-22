@@ -202,7 +202,7 @@ class MadnessReader:
 
         return response_j
 
-    def __read_response_protocol_data(self, protocol_data: json, num_states):
+    def __read_response_protocol_data(self, protocol_data, num_states):
         num_protocols = protocol_data.__len__()
         dcol = []
         xcol = []
