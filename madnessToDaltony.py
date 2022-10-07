@@ -1,9 +1,6 @@
 import os
-import sys
-import glob
 import pandas as pd
 import json
-import subprocess
 
 # make this into a class that way I can define class members like 
 # the periodic table and frequency json

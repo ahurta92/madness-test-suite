@@ -1,18 +1,9 @@
-import json
 import seaborn as sns
-import os
-
 import matplotlib.pyplot as plt
-
 from daltonRunner import DaltonRunner
-
 import numpy as np
-import pandas as pd
-
 from madnessToDaltony import *
-from scipy.stats import norm
 
-import statistics
 
 
 class MadnessReader:
