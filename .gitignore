@@ -14,7 +14,7 @@ hf/*
 hf/*/*
 data_tables/*
 
-__pycache__*
+__pycache__/
 
 
 
