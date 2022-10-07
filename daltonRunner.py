@@ -91,6 +91,7 @@ class DaltonRunner:
 
     def __run_dalton(self, rdir, dfile, mfile):
         dalton = shutil.which('dalton')
+        print(dalton)
         # Change to run directory
         os.chdir(rdir)
         # dalton [.dal] [.mol]
