@@ -346,7 +346,6 @@ class MadnessReader:
 
         for f in freq:
             try:
-                print("Frequency : ", f)
                 rbasej = self.__open_frequency_rbj(mol, xc, operator, f)
                 full_response_base[str(f)] = rbasej
                 converged_f = rbasej["converged"]
