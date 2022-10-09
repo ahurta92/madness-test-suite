@@ -13,9 +13,9 @@ from madnessToDaltony import *
 
 
 class MadnessReader:
-    def __init__(self,data_dir):
+    def __init__(self, data_dir):
 
-        self.data_dir =data_dir
+        self.data_dir = data_dir
         if not os.path.exists("dalton"):
             os.mkdir("dalton")
         with open(self.data_dir + "/molecules/frequency.json") as json_file:
@@ -424,13 +424,14 @@ def get_function_keys(num_states, num_orbitals):
 
 
 class FrequencyData:
-    def __init__(self, mol, xc, operator):
+    def __init__(self, mol, xc, operator, data_dir):
+        self.data_dir = data_dir
         self.calc_info = None
         self.dalton_data = {}
         self.mol = mol
         self.xc = xc
         self.operator = operator
-        mad_reader = MadnessReader()
+        mad_reader = MadnessReader(self.data_dir)
         (
             self.ground_params,
             self.ground_scf_data,
@@ -487,6 +488,7 @@ class FrequencyData:
                 "d_abs_error": ad_keys, "xij_norms": xij_keys, "xij_abs_error": axij_keys}
 
     def create_basis_table(self, basis_list, xx):
+        dalton_reader = DaltonRunner(self.data_dir)
         ground_dalton, response_dalton = dalton_reader.get_frequency_result(
             self.mol, self.xc, "dipole", basis_list[0]
         )
@@ -704,10 +706,9 @@ class ExcitedData:
 
 # Plotting definitions
 
-dalton_reader = DaltonRunner()
 
-
-def create_polar_table(mol, xc, basis_list, xx):
+def create_polar_table(mol, xc, basis_list, xx, database_dir):
+    dalton_reader = DaltonRunner(database_dir)
     ground_dalton, response_dalton = dalton_reader.get_frequency_result(
         mol, xc, "dipole", basis_list[0]
     )
@@ -755,11 +756,11 @@ def create_polar_table(mol, xc, basis_list, xx):
     return data.T
 
 
-def create_data(mol, xc, basis_list):
+def create_data(mol, xc, basis_list, database_dir):
     xx = ["xx", "yy", "zz"]
     data = []
     for x in xx:
-        data.append(create_polar_table(mol, xc, basis_list, x))
+        data.append(create_polar_table(mol, xc, basis_list, x, database_dir))
     average = (data[0] + data[1] + data[2]) / 3
 
     diff_data = average - average.loc["MRA"]
@@ -773,8 +774,8 @@ def create_data(mol, xc, basis_list):
     return average, diff_data, energy_diff, polar_diff
 
 
-def polar_plot(mol, xc, basis_list, ax):
-    data, diff_data, energy_diff, polar_diff = create_data(mol, xc, basis_list)
+def polar_plot(mol, xc, basis_list, ax, database_dir):
+    data, diff_data, energy_diff, polar_diff = create_data(mol, xc, basis_list, database_dir)
     num_freq = len(list(polar_diff.keys()))
     sns.set_theme(style="darkgrid")
     sns.set_context("talk", font_scale=1.5, rc={"lines.linewidth": 2.5})
@@ -796,13 +797,13 @@ def polar_plot(mol, xc, basis_list, ax):
     ax.set_xlabel(ax.get_xlabel(), rotation=45)
 
 
-def create_polar_diff_subplot(mol, xc, blist, dlist):
+def create_polar_diff_subplot(mol, xc, blist, dlist, database_dir):
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(25, 9), constrained_layout=True)
     title = 'Polarizability Convergence: ' + mol
     fig.suptitle(title)
 
-    polar_plot(mol, xc, blist, ax[0])
-    polar_plot(mol, xc, dlist, ax[1])
+    polar_plot(mol, xc, blist, ax[0], database_dir)
+    polar_plot(mol, xc, dlist, ax[1], database_dir)
 
     btitle = blist[0].replace('D', 'X')
     save = mol + "-" + btitle
