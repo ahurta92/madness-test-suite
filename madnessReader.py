@@ -1,3 +1,6 @@
+import glob
+import subprocess
+
 import seaborn as sns
 import matplotlib.pyplot as plt
 from daltonRunner import DaltonRunner
@@ -5,14 +8,13 @@ import numpy as np
 from madnessToDaltony import *
 
 
-
 class MadnessReader:
-    def __init__(self):
+    def __init__(self, data_dir):
 
-        PROOT = os.getcwd()
+        self.data_dir = data_dir
         if not os.path.exists("dalton"):
             os.mkdir("dalton")
-        with open(PROOT + "/molecules/frequency.json") as json_file:
+        with open(self.data_dir + "/molecules/frequency.json") as json_file:
             self.freq_json = json.loads(json_file.read())
 
     def __tensor_to_numpy(self, j):
@@ -34,7 +36,7 @@ class MadnessReader:
             iter_data = protocol_data[p]["iter_data"]
             if response_parameters["excited_state"]:
                 proto_data.append(
-                    self.__read_excited_proto_iter_data(iter_data, n_states, n_orbitals)
+                    self.__read_excited_proto_iter_data(iter_data, n_states)
                 )
             else:
                 proto_data.append(
@@ -145,7 +147,7 @@ class MadnessReader:
         # second number after decimal
         f2 = sfreq.split(".")[1]
 
-        moldir = PROOT + "/" + xc + "/" + mol
+        moldir = self.data_dir + "/" + xc + "/" + mol
         dfile = operator + "_" + xc + "_" + f1 + "-" + f2
         jsonf = "response_base.json"
 
@@ -158,7 +160,7 @@ class MadnessReader:
 
     def __open_ground_json(self, mol, xc):
 
-        moldir = PROOT + "/" + xc + "/" + mol
+        moldir = self.data_dir + "/" + xc + "/" + mol
         jsonf = "calc_info.json"
 
         path = "/".join([moldir, jsonf])
@@ -182,7 +184,7 @@ class MadnessReader:
     def __open_excited_rbj(self, mol, xc, num_states):
 
         # print(PROOT)
-        moldir = PROOT + "/" + xc + "/" + mol
+        moldir = self.data_dir + "/" + xc + "/" + mol
         dfile = "excited-" + str(num_states)
         jsonf = "response_base.json"
 
@@ -302,7 +304,7 @@ class MadnessReader:
     # TODO get the ground data
     def get_polar_result(self, mol, xc, operator):
 
-        freq = freq_json[mol][xc][operator]
+        freq = self.freq_json[mol][xc][operator]
         full_freq_data = {}
         fdata = {}
 
@@ -427,7 +429,7 @@ class MadnessReader:
 
     def get_excited_data(self, mol, xc):
 
-        num_states = freq_json[mol][xc]["excited-state"]
+        num_states = self.freq_json[mol][xc]["excited-state"]
         fdata = {}
         rbasej = self.__open_excited_rbj(mol, xc, num_states)
         converged = rbasej["converged"]
@@ -454,7 +456,7 @@ class MadnessReader:
 
     def get_excited_result(self, mol, xc):
 
-        num_states = freq_json[mol][xc]["excited-state"]
+        num_states = self.freq_json[mol][xc]["excited-state"]
         (
             params,
             full_omega,
@@ -493,14 +495,15 @@ class MadnessReader:
 
 
 class FrequencyData:
-    def __init__(self, mol, xc, operator):
+    def __init__(self, mol, xc, operator, data_dir):
+        self.data_dir = data_dir
         self.response_base = {}
         self.calc_info = None
         self.dalton_data = {}
         self.mol = mol
         self.xc = xc
         self.operator = operator
-        mad_reader = MadnessReader()
+        mad_reader = MadnessReader(self.data_dir)
 
         (
             self.ground_params,
@@ -772,12 +775,11 @@ class ExcitedData:
 
 # Plotting definitions
 
-dalton_reader = DaltonRunner()
 
-
-def create_polar_table(mol, xc, basis_list, xx):
+def create_polar_table(mol, xc, op, basis_list, xx, base_dir):
+    dalton_reader = DaltonRunner(base_dir)
     ground_dalton, response_dalton = dalton_reader.get_frequency_result(
-        mol, "hf", "dipole", basis_list[0]
+        mol, xc, op, basis_list[0]
     )
     freq = response_dalton["frequencies"]
     g_data = {}
@@ -786,7 +788,7 @@ def create_polar_table(mol, xc, basis_list, xx):
         xx_data.append({})
     for basis in basis_list:
         ground_dalton, response_dalton = dalton_reader.get_frequency_result(
-            mol, "hf", "dipole", basis
+            mol, xc, op, basis
         )
         for i in range(len(freq)):
             xx_data[i][basis] = response_dalton[xx][i]
@@ -805,7 +807,6 @@ def create_polar_table(mol, xc, basis_list, xx):
     dalton_df = pd.concat([g_df] + r_dfs, axis=1)
 
     moldata = FrequencyData(mol, "hf", "dipole")
-    moldata.polar_df[xx]
     mad_data_e = {}
     mad_data_r = {}
     mad_data_e["Total HF Energy"] = moldata.ground_e["e_tot"]

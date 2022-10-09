@@ -83,3 +83,6 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+.ipynb_checkpoints/ACS Fall2022 Final Order-Copy1-checkpoint.ipynb
+*.ipynb
+*.ipynb
