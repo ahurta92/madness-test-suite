@@ -1,6 +1,9 @@
+import subprocess
+
 import seaborn as sns
 
 import matplotlib.pyplot as plt
+from setuptools import glob
 
 from daltonRunner import DaltonRunner
 
@@ -10,12 +13,12 @@ from madnessToDaltony import *
 
 
 class MadnessReader:
-    def __init__(self):
+    def __init__(self,data_dir):
 
-        PROOT = os.getcwd()
+        self.data_dir =data_dir
         if not os.path.exists("dalton"):
             os.mkdir("dalton")
-        with open(PROOT + "/molecules/frequency.json") as json_file:
+        with open(self.data_dir + "/molecules/frequency.json") as json_file:
             self.freq_json = json.loads(json_file.read())
 
     def __tensor_to_numpy(self, j):
@@ -236,7 +239,7 @@ class MadnessReader:
 
     def __open_ground_json(self, mol, xc):
 
-        moldir = PROOT + "/" + xc + "/" + mol
+        moldir = self.data_dir + "/" + xc + "/" + mol
         jsonf = "moldft.calc_info.json"
 
         path = "/".join([moldir, jsonf])
@@ -260,7 +263,7 @@ class MadnessReader:
     def __open_excited_rbj(self, mol, xc, num_states):
 
         # print(PROOT)
-        moldir = PROOT + "/" + xc + "/" + mol
+        moldir = self.data_dir + "/" + xc + "/" + mol
         dfile = "excited-" + str(num_states)
         jsonf = "response_base.json"
 
@@ -272,7 +275,7 @@ class MadnessReader:
         return response_j
 
     def get_excited_data(self, mol, xc):
-        num_states = freq_json[mol][xc]["excited-state"]
+        num_states = self.freq_json[mol][xc]["excited-state"]
         rbasej = self.__open_excited_rbj(mol, xc, num_states)
         num_orbitals = rbasej["parameters"]["num_orbitals"]
         converged = rbasej["converged"]
@@ -296,7 +299,7 @@ class MadnessReader:
         # second number after decimal
         f2 = sfreq.split(".")[1]
 
-        moldir = PROOT + "/" + xc + "/" + mol
+        moldir = self.data_dir + "/" + xc + "/" + mol
         dfile = operator + "_" + xc + "_" + f1 + "-" + f2
         jsonf = "response_base.json"
 
@@ -325,7 +328,7 @@ class MadnessReader:
     # TODO get the ground data
     def get_polar_result(self, mol, xc, operator):
 
-        freq = freq_json[mol][xc][operator]
+        freq = self.freq_json[mol][xc][operator]
 
         polar_data = {}
         last_polar_freq = {}
