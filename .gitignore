@@ -86,3 +86,5 @@ docs/_build/
 .ipynb_checkpoints/ACS Fall2022 Final Order-Copy1-checkpoint.ipynb
 *.ipynb
 *.ipynb
+*.svg
+tables/Be-d-aug-cc-pVXZ.tex

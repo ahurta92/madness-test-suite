@@ -576,8 +576,8 @@ class FrequencyData:
     def get_thresh_data(self):
         return self.thresh_data
 
-    def compare_dalton(self, basis):
-        dalton_reader = DaltonRunner()
+    def compare_dalton(self, basis, base_dir):
+        dalton_reader = DaltonRunner(base_dir)
         ground_dalton, response_dalton = dalton_reader.get_frequency_result(
             self.mol, self.xc, self.operator, basis
         )
