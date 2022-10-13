@@ -11,6 +11,24 @@ import json
 import seaborn as sns
 import glob
 
+sns.set_context("paper")
+sns.set_theme(style="whitegrid")
+
+
+def chunkify(lst, n):
+    return [lst[i::n] for i in range(n)]
+
+
+def to_table(mol_list, n, series_name, database_dir):
+    paper_dir = database_dir + "/paper"
+    mol_list.sort(),
+    molecules = list(chunkify(mol_list, n))
+    mol_table = pd.DataFrame(molecules)
+    m = mol_table.style.hide(axis=0).hide(axis=1)
+    latex_table = paper_dir + "/" + series_name + ".tex"
+    m.to_latex(latex_table)
+    print(mol_table.to_markdown())
+
 
 class QCDatabase:
 
@@ -25,10 +43,10 @@ class QCDatabase:
             mol = m[-1].split('.')[0]
             self.mol_list.append(mol)
 
-        self.num_mols = len(self.mol_list)
+        self.num_molecules = len(self.mol_list)
 
 
-class FreqeuncyDatabase(QCDatabase):
+class FrequencyDatabase(QCDatabase):
     def __init__(self, database_dir, xc, op, num_freq):
         super().__init__(database_dir)
         self.xc = xc
@@ -36,7 +54,7 @@ class FreqeuncyDatabase(QCDatabase):
         self.num_freq = num_freq
         self.energy_string = 'Total ' + xc.upper() + ' Energy'
 
-    def report_converged(self):
+    def report_convergence(self):
         converged = []
         not_converged = []
         not_found = []
@@ -62,7 +80,7 @@ class FreqeuncyDatabase(QCDatabase):
         num_json_e = len(json_error)
         num_type_e = len(type_error)
         total = num_c + num_n + num_nf + num_json_e + num_type_e
-        non_converged = []
+        not_converged = []
         part_converged = []
         if True:
             for mol in not_converged:
@@ -71,8 +89,8 @@ class FreqeuncyDatabase(QCDatabase):
                     # print(mol,'\n',check.converged)
                     part_converged.append(mol)
                 else:
-                    non_converged.append(mol)
-        num_not_converged = len(non_converged)
+                    not_converged.append(mol)
+        num_not_converged = len(not_converged)
         num_part_converged = len(part_converged)
         print("converged : ", num_c)
         print("not converged : ", num_n)
@@ -82,7 +100,7 @@ class FreqeuncyDatabase(QCDatabase):
         print("total : ", total)
         print("fully not converged", num_not_converged)
         print("num partly fully converged", num_part_converged)
-        return converged, part_converged, non_converged, not_found, type_error, json_error
+        return converged, part_converged, not_converged, not_found, type_error, json_error
 
     def frequency_basis_error(self, mol, compare_basis):
         data = FrequencyData(mol, self.xc, self.op, self.database_dir)
@@ -168,13 +186,12 @@ class FreqeuncyDatabase(QCDatabase):
     def get_spherical_polarizability_error(self, mol, basis_list):
 
         polar = self.get_spherical_polarizability(mol, basis_list)
-        polar_error = polar - polar.loc["MRA"]
+        polar_error = (polar - polar.loc["MRA"]) / polar.loc["MRA"] * 100
+
         polar_error = polar_error.drop(index="MRA")
         return polar_error
 
     def create_polar_diff_plot(self, mol, basis_list):
-        sns.set_theme(style="darkgrid")
-        sns.set_context("talk", font_scale=2.0, rc={"lines.linewidth": 2.5})
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10), constrained_layout=True)
         title = r'Basis-set convergence of $\alpha(\omega)$ : ' + mol
         yl = r" $\Delta\alpha=\alpha($BASIS$) -\alpha($MRA$)$"
@@ -256,12 +273,10 @@ class FreqeuncyDatabase(QCDatabase):
 
 
 class PolarBasisComparisonDatabase:
-    def __init__(self, f_data: FreqeuncyDatabase, mol_list, basis_list):
-        self.data = f_data
+    def __init__(self, f_data: FrequencyDatabase, mol_list, basis_list):
         self.basis_list = basis_list
-
-        self.mol_list = self.data.partition_basis_data(mol_list, basis_list)
-        self.data = self.data.get_basis_set_error(self.mol_list, self.basis_list)
+        self.mol_list = f_data.partition_basis_data(mol_list, basis_list)  # grab molecules with available Dalton data
+        self.data = f_data.get_basis_set_error(self.mol_list, self.basis_list)
         self.data_list = list(self.data.keys())
 
     def from_data(self, data):
@@ -285,7 +300,7 @@ class PolarBasisComparisonDatabase:
 
         return self.from_data(keep), self.from_data(remove)
 
-    def partition_by_type(self, blist, dlist, partition_string):
+    def partition_data_by_type(self, blist, dlist, partition_string):
         d1 = self.data.loc[self.data.index.isin(blist)]  # not augmented
         num_data = len(list(d1.index))
         d2 = self.data.loc[self.data.index.isin(dlist)]  # augmented
@@ -305,23 +320,43 @@ class PolarBasisComparisonDatabase:
         d2 = pd.concat([d2, aug_true], axis=1)
         d1 = pd.concat([d1, aug_false], axis=1)
 
-        return self.from_data(pd.concat([d1, d2]))
+        return self.from_data(pd.concat([d1, d2])).data
 
 
-def augmentation_violin_plot(data: PolarBasisComparisonDatabase, data_id, ax):
-    p1 = sns.violinplot(x=data.data.index, y=data.data[data_id], hue=data.data['d-aug'], ax=ax, split=True,
+class PartitionedDatabase(PolarBasisComparisonDatabase):
+    def __init__(self, f_data: FrequencyDatabase, basis_list, blist, dlist, partition_type):
+        super().__init__(f_data, f_data.mol_list, basis_list)
+
+        self.partition_type = partition_type
+        self.basis1 = blist
+        self.basis2 = dlist
+
+        self.data = self.partition_data_by_type(blist, dlist, partition_type)
+
+
+def comparison_violin_plot(db: PartitionedDatabase, data_id, hue_label, ax):
+    p1 = sns.violinplot(x=db.data.index, y=db.data[data_id], hue=db.data[hue_label], ax=ax, split=True,
                         scale="count", inner="quartile", scale_hue=False)
-    p11 = sns.swarmplot(x=data.data.index, y=data.data[data_id], hue=data.data['d-aug'], ax=ax, size=5.0, dodge=True,
-                        color='.2')
+    p11 = sns.swarmplot(x=db.data.index, y=db.data[data_id], hue=db.data[hue_label], ax=ax, size=3.2, dodge=True,
+                        palette='dark:.2')
     ax.axhline(y=0, linewidth=4, ls="--", color="r")
-
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[:2], ['aug', 'd-aug'])
-    ax.set_title(data_id, fontsize=30)
+    if hue_label == 'd-aug':
+        ax.legend(handles[:2], ['aug', 'd-aug'])
+    elif hue_label == 'polarized_core':
+        ax.legend(handles[:2], ['non-polarized', 'polarized'])
 
-    ax.set_xlabel('Basis', fontsize=28)
-    ax.set_ylabel(r'$\Delta$' + data_id + ' : [(basis) - (MRA)]', fontsize=28)
-    nblist = len(list(data.data.index.unique()))
+    ax.set_title(data_id)  # fontsize=30)
+    ax.set_xlabel('basis')  # , fontsize=28)
+    ax.set_ylabel('relative Error')
+    #ax.set_ylabel(r'$\Delta$' + data_id + ' : [(basis) - (MRA)]')  # , fontsize=28)
+
+    # ax.set_title(data_id, fontsize=30)
+    # ax.set_xlabel('Basis', fontsize=28)
+    # ax.set_ylabel(r'$\Delta$' + data_id + ' : [(basis) - (MRA)]', fontsize=28)
+    nblist = len(list(db.data.index.unique()))
     xticks = [i for i in range(nblist)]
     labels = ['D', 'T', 'Q', '5', '6']
-    ax.set_xticks(xticks, labels=labels[0:nblist], fontsize=24)
+    ax.set_xticks(xticks, labels=labels[0:nblist])  # fontsize=24)
+
+
