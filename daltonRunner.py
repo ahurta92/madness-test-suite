@@ -47,6 +47,9 @@ class DaltonRunner:
         dalton_inp.append("**DALTON INPUT")
         dalton_inp.append(".RUN RESPONSE")
         dalton_inp.append(".DIRECT")
+        if basis.split("-")[-1] == "uc":
+            dalton_inp.append("*MOLBAS ")
+            dalton_inp.append(".UNCONT ")
         dalton_inp.append("**WAVE FUNCTIONS")
         # HF or DFT
         if xc == "hf":
@@ -79,7 +82,10 @@ class DaltonRunner:
         # Here I read the madness mol file from the molecules directory
         madmolfile = self.base_dir + "/molecules/" + madmol + ".mol"
         mad_to_dal = madnessToDalton(self.base_dir)
-        mol_input = mad_to_dal.madmol_to_dalmol(madmolfile, basis)
+        if basis.split("-")[-1] == "uc":
+            mol_input = mad_to_dal.madmol_to_dalmol(madmolfile, "-".join(basis.split("-")[:-1]))
+        else:
+            mol_input = mad_to_dal.madmol_to_dalmol(madmolfile, basis)
         dal_run_file = run_dir + "/freq.dal"
         with open(dal_run_file, "w") as file:  # Use file to refer to the file object
             file.write(dalton_inp)
@@ -147,8 +153,9 @@ class DaltonRunner:
             os.makedirs(run_dir)
         madmolfile = self.base_dir + "/molecules/" + madmol + ".mol"
         if basis.split("-")[-1] == "uc":
-            mol_input = mad_to_dal.madmol_to_dalmol(madmolfile, "".join(basis.split("-")[:-1]))
-        mol_input = mad_to_dal.madmol_to_dalmol(madmolfile, basis)
+            mol_input = mad_to_dal.madmol_to_dalmol(madmolfile, "-".join(basis.split("-")[:-1]))
+        else:
+            mol_input = mad_to_dal.madmol_to_dalmol(madmolfile, basis)
         dal_run_file = run_dir + "/excited.dal"
         with open(dal_run_file, "w") as file:  # Use file to refer to the file object
             file.write(dalton_inp)
