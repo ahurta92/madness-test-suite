@@ -5,7 +5,7 @@ from madnessReader import MadnessReader
 from madnessReader import ExcitedData
 from madnessReader import FrequencyData
 from madnessReader import *
-from daltonRunner import DaltonRunner
+from dalton import Dalton
 import matplotlib.pyplot as plt
 import json
 import seaborn as sns
@@ -18,12 +18,12 @@ sns.set_theme(style="whitegrid")
 def chunkify(lst, n):
     return [lst[i::n] for i in range(n)]
 
+
 def to_table(mol_list, n):
     mol_list.sort(),
     molecules = list(chunkify(mol_list, n))
     mol_table = pd.DataFrame(molecules)
     return mol_table
-
 
 
 class QCDatabase:
@@ -49,6 +49,7 @@ class FrequencyDatabase(QCDatabase):
         self.op = op
         self.num_freq = num_freq
         self.energy_string = 'Total ' + xc.upper() + ' Energy'
+        self.mol_list = self.report_convergence()[0]  # only keep molecules that are completely converged
 
     def report_convergence(self):
         converged = []
@@ -116,7 +117,7 @@ class FrequencyDatabase(QCDatabase):
         return pd.DataFrame(b_error)
 
     def create_polar_table(self, mol, basis_list, xx):
-        dalton_reader = DaltonRunner(self.database_dir)
+        dalton_reader = Dalton(self.database_dir, False)
         ground_dalton, response_dalton = dalton_reader.get_frequency_result(
             mol, self.xc, self.op, basis_list[0]
         )
@@ -250,20 +251,29 @@ class FrequencyDatabase(QCDatabase):
 
         data = pd.DataFrame()
         for mol in mol_list:
-            mol_data = self.get_molecule_basis_error(mol, basis_list)
-            data = pd.concat([data, mol_data])
+            try:
+                mol_data = self.get_molecule_basis_error(mol, basis_list)
+                # concatenate if there is no problem
+                data = pd.concat([data, mol_data])
+            except ValueError as v:
+                # report molecules with a problem
+                print(mol)
+                print(v)
+                pass
         return data
 
     def partition_basis_data(self, mol_list, basis_list):
-        dalton_reader = DaltonRunner(self.database_dir)
+        dalton_reader = Dalton(self.database_dir, False)
         yes = []
         no = []
         for mol in mol_list:
             try:
                 for b in basis_list:
-                    ground_dalton, response_dalton = dalton_reader.get_frequency_result(mol, self.xc, self.op, b)
+                    if not dalton_reader.polar_json_exists(mol, self.xc, self.op, b):
+                        raise ValueError(mol + " not found with basis " + b)
                 yes.append(mol)
-            except:
+            except ValueError as v:
+                print(v)
                 no.append(mol)
                 pass
         return yes
@@ -274,6 +284,7 @@ class PolarBasisComparisonDatabase:
         self.basis_list = basis_list
         self.mol_list = f_data.partition_basis_data(f_data.mol_list,
                                                     basis_list)  # grab molecules with available Dalton data
+        print(len(self.mol_list))
         self.data = f_data.get_basis_set_error(self.mol_list, self.basis_list)
         self.data_list = list(self.data.keys())
 

@@ -5,7 +5,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from setuptools import glob
 
-from daltonRunner import DaltonRunner
+from dalton import Dalton
 
 import numpy as np
 
@@ -487,7 +487,7 @@ class FrequencyData:
                 "d_abs_error": ad_keys, "xij_norms": xij_keys, "xij_abs_error": axij_keys}
 
     def create_basis_table(self, basis_list, xx):
-        dalton_reader = DaltonRunner(self.data_dir)
+        dalton_reader = Dalton(self.data_dir)
         ground_dalton, response_dalton = dalton_reader.get_frequency_result(
             self.mol, self.xc, "dipole", basis_list[0]
         )
@@ -671,7 +671,7 @@ class ExcitedData:
         self.num_orbitals = self.params["num_orbitals"]
 
     def compare_dalton(self, basis):
-        dalton_reader = DaltonRunner()
+        dalton_reader = Dalton()
         ground_dalton, response_dalton = dalton_reader.get_excited_result(self.mol, self.xc, basis, True)
 
         ground_compare = pd.concat(
@@ -707,7 +707,7 @@ class ExcitedData:
 
 
 def create_polar_table(mol, xc, basis_list, xx, database_dir):
-    dalton_reader = DaltonRunner(database_dir)
+    dalton_reader = Dalton(database_dir)
     ground_dalton, response_dalton = dalton_reader.get_frequency_result(
         mol, xc, "dipole", basis_list[0]
     )

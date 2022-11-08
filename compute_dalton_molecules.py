@@ -1,5 +1,5 @@
 import sys
-from daltonRunner import DaltonRunner
+from dalton import Dalton
 
 mol = sys.argv[1]
 xc = sys.argv[2]
@@ -7,7 +7,7 @@ op = sys.argv[3]
 basis = sys.argv[4]
 num_proc = sys.argv[5]
 
-runner = DaltonRunner()
+runner = Dalton()
 
 runner.Np = num_proc
 

@@ -10,12 +10,13 @@ import json
 from daltonToJson import daltonToJson
 
 
-class DaltonRunner:
+class Dalton:
     DALROOT = None
 
     @classmethod
-    def __init__(self, base_dir):
+    def __init__(self, base_dir, run_new):
 
+        self.run = run_new
         self.base_dir = base_dir
         self.DALROOT = os.path.join(self.base_dir, os.pardir)
         self.DALROOT += "/dalton/"
@@ -237,8 +238,12 @@ class DaltonRunner:
         outfile = run_directory + outfile
         try:
             with open(outfile, "r") as daltonOutput:
+                dipole_j = self.get_polar_json(mol, xc, operator, basis)
+                if dipole_j is None:
+                    raise TypeError('polar json does not exist for ' + mol + ' ' + xc + ' ' + operator + ' ' + basis)
                 return True
-        except (FileNotFoundError, KeyError, IndexError) as e:
+        except (FileNotFoundError, KeyError, IndexError, TypeError) as e:
+            print(e)
             return False
 
     def get_polar_json(self, mol, xc, operator, basis):
@@ -247,19 +252,22 @@ class DaltonRunner:
                                                                        )
         outfile = "/freq_" + "-".join([mol, basis]) + ".out"
         outfile = run_directory + outfile
+        data = None
         try:
             with open(outfile, "r") as daltonOutput:
                 dj = daltonToJson()
                 data = self.__create_frequency_json(dj.convert(daltonOutput), basis)
         except (FileNotFoundError, KeyError, IndexError) as e:
             print(e)
-            print("Try and run molecule ", mol)
-            d_out, d_error = self.__run_dalton(run_directory, dal_input, mol_input)
-            print(d_out, d_error)
-            with open(outfile, "r") as daltonOutput:
-                dj = daltonToJson()
-                data = self.__create_frequency_json(dj.convert(daltonOutput), basis)
-            pass
+            if self.run:
+                print("Try and run molecule ", mol)
+                d_out, d_error = self.__run_dalton(run_directory, dal_input, mol_input)
+                print(d_out, d_error)
+                with open(outfile, "r") as daltonOutput:
+                    dj = daltonToJson()
+                    data = self.__create_frequency_json(dj.convert(daltonOutput), basis)
+            else:
+                pass
         return data
 
     def get_excited_json(self, mol, xc, basis, run):

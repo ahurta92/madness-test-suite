@@ -3,7 +3,7 @@ import subprocess
 
 import seaborn as sns
 import matplotlib.pyplot as plt
-from daltonRunner import DaltonRunner
+from dalton import Dalton
 import numpy as np
 from madnessToDaltony import *
 
@@ -577,7 +577,7 @@ class FrequencyData:
         return self.thresh_data
 
     def compare_dalton(self, basis, base_dir):
-        dalton_reader = DaltonRunner(base_dir)
+        dalton_reader = Dalton(base_dir)
         ground_dalton, response_dalton = dalton_reader.get_frequency_result(
             self.mol, self.xc, self.operator, basis
         )
@@ -603,7 +603,7 @@ class FrequencyData:
         return ground_compare, response_dalton, polar_df, diff_df
 
     def plot_polar_data(self, basis, ij_list):
-        dalton_reader = DaltonRunner()
+        dalton_reader = Dalton()
         if basis in self.dalton_data:
             response_dalton = self.dalton_data[basis]
         else:
@@ -631,7 +631,7 @@ class FrequencyData:
         comp_df.plot(title=str(self.mol))
 
     def compare_polar_basis_list(self, ij_j_list, basis_list):
-        dalton_reader = DaltonRunner()
+        dalton_reader = Dalton()
 
         freq = pd.Series(self.polar_df.index.values)
         freq.name = "Frequency"
@@ -659,7 +659,7 @@ class FrequencyData:
         return polar_df
 
     def compare_diff_basis_list(self, ij_j_list, basis_list):
-        dal_runner = DaltonRunner()
+        dal_runner = Dalton()
 
         freq = pd.Series(self.polar_df.index.values)
         freq.name = "Frequency"
@@ -741,7 +741,7 @@ class ExcitedData:
         )
 
     def compare_dalton(self, basis):
-        dalton_reader = DaltonRunner()
+        dalton_reader = Dalton()
         ground_dalton, response_dalton = dalton_reader.get_excited_result(self.mol, self.xc, basis, True)
 
         ground_compare = pd.concat(
@@ -768,16 +768,8 @@ class ExcitedData:
 
         return ground_compare, omega_df
 
-
-# input response_info json and returns a dict of response paramters
-# and a list of dicts of numpy arrays holding response data
-
-
-# Plotting definitions
-
-
 def create_polar_table(mol, xc, op, basis_list, xx, base_dir):
-    dalton_reader = DaltonRunner(base_dir)
+    dalton_reader = Dalton(base_dir)
     ground_dalton, response_dalton = dalton_reader.get_frequency_result(
         mol, xc, op, basis_list[0]
     )
