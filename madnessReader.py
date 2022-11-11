@@ -768,6 +768,7 @@ class ExcitedData:
 
         return ground_compare, omega_df
 
+
 def create_polar_table(mol, xc, op, basis_list, xx, base_dir):
     dalton_reader = Dalton(base_dir)
     ground_dalton, response_dalton = dalton_reader.get_frequency_result(
