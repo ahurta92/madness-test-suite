@@ -1,9 +1,4 @@
 import copy
-import os
-import pandas as pd
-from madnessReader import MadnessReader
-from madnessReader import ExcitedData
-from madnessReader import FrequencyData
 from madnessReader import *
 from dalton import Dalton
 import matplotlib.pyplot as plt
@@ -183,7 +178,7 @@ class FrequencyDatabase(QCDatabase):
     def get_spherical_polarizability_error(self, mol, basis_list):
 
         polar = self.get_spherical_polarizability(mol, basis_list)
-        polar_error = (polar - polar.loc["MRA"]) / polar.loc["MRA"] * 100
+        polar_error = (polar - polar.loc["MRA"]) / polar.loc["MRA"]
 
         polar_error = polar_error.drop(index="MRA")
         return polar_error
@@ -512,3 +507,102 @@ def get_full_freq_stats(df: pd.DataFrame):
         for b in df.basis.unique():
             full = pd.concat([full, get_freq_stats(df, b, daug)])
     return full
+
+
+# get monotonoic molecules positive and neagive
+def get_norm_class(data: pd.DataFrame, omega: float, daug: bool):
+    DZ = data[(data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVDZ')]
+    TZ = data[(data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVTZ')]
+    QZ = data[(data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVQZ')]
+    VZ = data[(data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pV5Z')]
+
+    DZ.reset_index(inplace=True)
+    TZ.reset_index(inplace=True)
+    QZ.reset_index(inplace=True)
+    VZ.reset_index(inplace=True)
+
+    DTF = ~(DZ.error.abs() > TZ.error.abs())
+    TQF = ~(TZ.error.abs() > QZ.error.abs())
+    QVF = ~(QZ.error.abs() > VZ.error.abs())
+
+    norm = {"Absolute": list(DZ[~DTF & ~TQF & ~QVF].molecule.unique()),
+            "T": list(DZ[DTF & ~TQF & ~QVF].molecule.unique()),
+            "Q": list(DZ[~DTF & TQF & ~QVF].molecule.unique()),
+            "5": list(DZ[~DTF & ~TQF & QVF].molecule.unique()),
+            "TQ": list(DZ[DTF & TQF & ~QVF].molecule.unique()),
+            "T5": list(DZ[DTF & ~TQF & QVF].molecule.unique()),
+            "Q5": list(DZ[~DTF & TQF & QVF].molecule.unique()),
+            "TQ5": list(DZ[DTF & TQF & QVF].molecule.unique())}
+    return norm
+
+
+def get_mono_class(data, omega, daug):
+    DZ = data[(data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVDZ')]
+    TZ = data[(data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVTZ')]
+    QZ = data[(data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVQZ')]
+    VZ = data[(data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pV5Z')]
+
+    DZ.reset_index(inplace=True)
+    TZ.reset_index(inplace=True)
+    QZ.reset_index(inplace=True)
+    VZ.reset_index(inplace=True)
+
+    MONO_DT = (DZ.error.abs() > TZ.error.abs()) & ((DZ.error * TZ.error) > 0)
+    MONO_TQ = (TZ.error.abs() > QZ.error.abs()) & ((TZ.error * QZ.error) > 0)
+    MONO_QV = (QZ.error.abs() > VZ.error.abs()) & ((QZ.error * VZ.error) > 0)
+
+    mono_class = {}
+    MONO_DZ = DZ[MONO_DT & MONO_TQ & MONO_QV]
+    NONMONO = DZ[~(MONO_DT & MONO_TQ & MONO_QV)].molecule.unique()
+    MONO_POS = MONO_DZ[MONO_DZ.error > 0].molecule.unique()
+    MONO_NEG = MONO_DZ[MONO_DZ.error <= 0].molecule.unique()
+    DZ = data[
+        (data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVDZ') & data.molecule.isin(NONMONO)]
+    TZ = data[
+        (data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVTZ') & data.molecule.isin(NONMONO)]
+    QZ = data[
+        (data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVQZ') & data.molecule.isin(NONMONO)]
+    VZ = data[
+        (data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pV5Z') & data.molecule.isin(NONMONO)]
+    DZ.reset_index(inplace=True)
+    TZ.reset_index(inplace=True)
+    QZ.reset_index(inplace=True)
+    VZ.reset_index(inplace=True)
+
+    DTF = ~((DZ.error.abs() > TZ.error.abs()) & ((DZ.error * TZ.error) > 0))
+    TQF = ~((TZ.error.abs() > QZ.error.abs()) & ((TZ.error * QZ.error) > 0))
+    QVF = ~((QZ.error.abs() > VZ.error.abs()) & ((QZ.error * VZ.error) > 0))
+
+    mono_class["Positive"] = list(MONO_POS)
+    mono_class["Negative"] = list(MONO_NEG)
+
+    mono_class["T"] = list(DZ[DTF & ~TQF & ~QVF].molecule.unique())
+    mono_class["Q"] = list(DZ[~DTF & TQF & ~QVF].molecule.unique())
+    mono_class["5"] = list(DZ[~DTF & ~TQF & QVF].molecule.unique())
+
+    mono_class["TQ"] = list(DZ[DTF & TQF & ~QVF].molecule.unique())
+    mono_class["Q5"] = list(DZ[DTF & ~TQF & QVF].molecule.unique())
+    mono_class["Q5"] = list(DZ[~DTF & TQF & QVF].molecule.unique())
+
+    mono_class["TQ5"] = list(DZ[DTF & TQF & QVF].molecule.unique())
+    return mono_class
+
+
+def classify_data(data, mol_key):
+    clf = []
+    for cl, mols in mol_key.items():
+        num_mols = len(mols)
+        class_series = pd.Series([cl for i in range(num_mols)])
+        class_series.name = 'mol_key'
+        mol_series = pd.Series(mols)
+        mol_series.name = 'molecule'
+        clf.append(pd.concat([class_series, mol_series], axis=1))
+    convergence_class = pd.concat(clf)
+    mol_data = copy.copy(data)
+    mol_data.insert(len(data.columns), 'mol_key', pd.Series(dtype=str))
+    for index, row in convergence_class.iterrows():
+        # print(row['class'], row['molecule'])
+        class_r = row['mol_key']
+        mol_r = row['molecule']
+        mol_data.loc[data.molecule == mol_r, "mol_key"] = class_r
+    return mol_data.dropna()
