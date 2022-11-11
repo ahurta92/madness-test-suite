@@ -14,10 +14,7 @@ from madnessToDaltony import *
 
 class MadnessReader:
     def __init__(self, data_dir):
-
         self.data_dir = data_dir
-        if not os.path.exists("dalton"):
-            os.mkdir("dalton")
         with open(self.data_dir + "/molecules/frequency.json") as json_file:
             self.freq_json = json.loads(json_file.read())
 
@@ -366,16 +363,7 @@ class MadnessReader:
 
             except FileNotFoundError as not_found:
                 print(f, " not found:", not_found)
-                return (
-                    full_params,
-                    time_data,
-                    pd.Series(converged),
-                    num_iter_proto,
-                    full_response_base,
-                    function_data,
-                    polar_data,
-                    pd.DataFrame(last_polar_freq).T
-                )
+                return None
 
         return (
             full_params,
@@ -422,11 +410,10 @@ def get_function_keys(num_states, num_orbitals):
             "d_abs_error": ad_keys, "xij_norms": xij_keys, "xij_abs_error": axij_keys}
 
 
-class FrequencyData:
+class ResponseCalc:
     def __init__(self, mol, xc, operator, data_dir):
         self.data_dir = data_dir
-        self.calc_info = None
-        self.dalton_data = {}
+        self.ground_info = None
         self.mol = mol
         self.xc = xc
         self.operator = operator
@@ -435,7 +422,7 @@ class FrequencyData:
             self.ground_params,
             self.ground_scf_data,
             self.ground_timing,
-            self.calc_info,
+            self.ground_info,
         ) = mad_reader.get_ground_scf_data(mol, xc)
         e_name_list = ["e_coulomb", "e_kinetic", "e_local", "e_nrep", "e_tot"]
         self.ground_e = {}
@@ -453,6 +440,12 @@ class FrequencyData:
         ) = mad_reader.get_polar_result(mol, xc, operator)
         self.num_states = self.params['0.0']["states"]
         self.num_orbitals = self.params['0.0']["num_orbitals"]
+        self.function_keys = self.get_function_keys()
+        self.data = {"ground": self.__get_ground_data()}
+        fdata, pdata = self.__get_response_data()
+        self.data["response"] = {}
+        self.data["response"]["function"] = fdata
+        self.data["response"]["polarizability"] = pdata
 
     def get_function_keys(self):
         x_keys = []
@@ -486,102 +479,59 @@ class FrequencyData:
         return {"x_norms": x_keys, "x_abs_error": ax_keys, "x_rel_error": rx_keys, "d_norms": d_keys,
                 "d_abs_error": ad_keys, "xij_norms": xij_keys, "xij_abs_error": axij_keys}
 
-    def create_basis_table(self, basis_list, xx):
-        dalton_reader = Dalton(self.data_dir)
-        ground_dalton, response_dalton = dalton_reader.get_frequency_result(
-            self.mol, self.xc, "dipole", basis_list[0]
-        )
-        freq = response_dalton["frequencies"]
-        g_data = {}
-        xx_data = []
-        for i in range(len(freq)):
-            xx_data.append({})
-        for basis in basis_list:
-            ground_dalton, response_dalton = dalton_reader.get_frequency_result(
-                self.mol, self.xc, "dipole", basis
-            )
-            for i in range(len(freq)):
-                xx_data[i][basis] = response_dalton[xx].iloc[i]
-            g_data[basis] = ground_dalton["totalEnergy"]
-        g_df = pd.Series(g_data)
-        g_df.name = "Total HF Energy"
-        names = []
-        for f in freq:
-            names.append("a(" + "{:.3f}".format(f) + ")")
-        r_dfs = []
-        for i in range(len(freq)):
-            r_dfs.append(pd.Series(xx_data[i]))
-            r_dfs[i].name = names[i]
-        dalton_df = pd.concat([g_df] + r_dfs, axis=1)
-        mad_data_e = {}
-        mad_data_r = {}
-        mad_data_e["Total HF Energy"] = self.ground_e["e_tot"]
-        for i in range(len(names)):
-            mad_data_r[names[i]] = self.polar_data[xx].iloc[i]
-        mad_data_e = pd.Series(mad_data_e)
-        mad_data_r = pd.Series(mad_data_r)
+    def __get_ground_precision(self):
+        gprec = self.ground_info["precision"]
+        ground_data = {}
+        for key, val in gprec.items():
+            if key == "dconv":
+                ground_data["g-dconv"] = val
+            elif key == "thresh":
+                ground_data["g-thresh"] = val
+            elif key == "k":
+                ground_data["g-k"] = val
+            elif key == "eprec":
+                ground_data["g-eprec"] = val
+        return pd.Series(ground_data)
 
-        mad_data = pd.concat([mad_data_e, mad_data_r], axis=0)
-        mad_data.name = "MRA"
-        mad_data.key = ["MRA"]
-        data = pd.concat([dalton_df.T, mad_data.T], axis=1)
-        return data.T
+    def __get_response_precision(self, omega):
+        p_dict = self.response_base[omega]
+        r_prec = {}
+        for key, val in p_dict.items():
+            if key == "dconv":
+                r_prec["r-dconv"] = val
+            elif key == "thresh":
+                r_prec["r-thresh"] = val
+            elif key == "k":
+                r_prec["r-k"] = val
+        return pd.Series(r_prec, dtype=float)
 
-    def create_basis_data(self, basis_list):
-        xx = ["xx", "yy", "zz"]
-        data = []
-        for x in xx:
-            data.append(self.create_basis_table(basis_list, x))
-        average = (data[0] + data[1] + data[2]) / 3
-        diff_data = average - average.loc["MRA"]
-        diff_data = diff_data.drop(index="MRA")
+    def __get_response_data(self):
+        polar_keys = ['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz']
+        ff = []
+        pp = []
+        g_precision = self.__get_ground_precision()
 
-        polar_diff = diff_data.drop("Total HF Energy", axis=1)
+        for om, data in self.response_base.items():
+            if data["converged"]:
+                fdo = self.function_data[om].iloc[-1, 1:]
+                pdo = self.polar_data.loc[om, polar_keys]
+                fd = {}
+                fd['frequency'] = om
+                freq = pd.Series(fd)
+                r_prec = self.__get_response_precision(om)
+                ff.append(pd.concat([freq, g_precision, r_prec, fdo]))
+                pp.append(pd.concat([freq, g_precision, r_prec, pdo]))
+        fdata = pd.DataFrame(ff)
+        pdata = pd.DataFrame(pp)
+        return fdata, pdata
 
-        average.name = "Average Polarizability"
-        energy_diff = diff_data["Total HF Energy"]
+    def __get_ground_data(self):
+        ground_data = self.__get_ground_precision()
+        ground_data.update(self.ground_e)
+        e_data = pd.Series(ground_data)
+        return e_data
 
-        return average, diff_data, energy_diff, polar_diff
-
-    def polar_plot(self, basis_list, ax):
-        data, diff_data, energy_diff, polar_diff = self.create_basis_data(basis_list)
-        num_freq = len(list(polar_diff.keys()))
-        sns.set_theme(style="darkgrid")
-        sns.set_context("talk", font_scale=1.5, rc={"lines.linewidth": 2.5})
-
-        btitle = basis_list[0].replace('D', 'X')
-
-        polar_diff.iloc[:, :].plot(marker="v", linestyle="solid", markersize=12, linewidth=4,
-                                   colormap='magma', ax=ax, title=btitle)
-
-        legend = []
-        for i in range(num_freq):
-            legend.append(r'$\omega_{}$'.format(i))
-
-        ax.axhline(linewidth=2, ls="--", color="k")
-        ax.legend(legend)
-        # ax.set_xticks(rotation=20)
-        yl = r" $\Delta\alpha=[\alpha($BASIS$) -\alpha($MRA$)]$"
-        ax.set_ylabel(yl)
-        ax.set_xlabel(ax.get_xlabel(), rotation=45)
-
-    def create_polar_diff_subplot(self, blist, dlist):
-        fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(25, 9), constrained_layout=True)
-        title = 'Polarizability Convergence: ' + self.mol
-        fig.suptitle(title)
-
-        self.polar_plot(blist, ax[0])
-        self.polar_plot(dlist, ax[1])
-
-        btitle = blist[0].replace('D', 'X')
-        save = self.mol + "-" + btitle
-        if not os.path.exists("acs_mols"):
-            os.mkdir("acs_mols")
-        save = "acs_mols/" + save + ".svg"
-        fig.savefig(save)
-        return fig
-
-    def plot_norm_and_residual_freq(self, num_i, ax):
+    def __plot_norm_and_residual_freq(self, num_i, ax):
         fkeys = get_function_keys(self.num_states, self.num_orbitals)
         abs_keys = fkeys["x_abs_error"]
         rel_keys = fkeys["x_rel_error"]
@@ -615,7 +565,7 @@ class FrequencyData:
             ax[i].minorticks_on()
             ax[i].tick_params(which="both", top="on", left="on", right="on", bottom="on", )
 
-    def freq_norm_and_residual(self, save):
+    def plot_freq_norm_and_residual(self, save):
         xkeys = []
         ykeys = []
         for i in range(self.num_states):
@@ -630,7 +580,7 @@ class FrequencyData:
             fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(25, 9), constrained_layout=True)
             title = 'Polarizability Convergence: ' + self.mol + r'  $\omega({}/{})$'.format(i, num_freqs - 1)
             fig.suptitle(title)
-            self.plot_norm_and_residual_freq(i, ax)
+            self.__plot_norm_and_residual_freq(i, ax)
             plotname = 'freq_{}'.format(i) + ".svg"
             if save:
                 if not os.path.exists("convergence"):
@@ -652,7 +602,7 @@ class ExcitedData:
             self.ground_params,
             self.ground_scf_data,
             self.ground_timing,
-            self.calc_info
+            self.ground_info
         ) = mad_reader.get_ground_scf_data(mol, xc)
         e_name_list = ["e_coulomb", "e_kinetic", "e_local", "e_nrep", "e_tot"]
         self.ground_e = {}
@@ -670,8 +620,8 @@ class ExcitedData:
         self.num_states = self.params["states"]
         self.num_orbitals = self.params["num_orbitals"]
 
-    def compare_dalton(self, basis):
-        dalton_reader = Dalton()
+    def compare_dalton(self, basis, base_dir):
+        dalton_reader = Dalton(base_dir)
         ground_dalton, response_dalton = dalton_reader.get_excited_result(self.mol, self.xc, basis, True)
 
         ground_compare = pd.concat(
@@ -737,7 +687,7 @@ def create_polar_table(mol, xc, basis_list, xx, database_dir):
         r_dfs[i].name = names[i]
     dalton_df = pd.concat([g_df] + r_dfs, axis=1)
 
-    moldata = FrequencyData(mol, "hf", "dipole")
+    moldata = ResponseCalc(mol, "hf", "dipole")
     mad_data_e = {}
     mad_data_r = {}
     mad_data_e["Total HF Energy"] = moldata.ground_e["e_tot"]
@@ -845,7 +795,7 @@ def create_excited_comparison_data(basis, excluded):
 
 
 def create_polar_mol_series(mol, basis):
-    data = FrequencyData(mol, "hf", "dipole")
+    data = ResponseCalc(mol, "hf", "dipole")
 
     converged = data.converged
     freq = pd.Series(converged.keys())
@@ -1023,7 +973,7 @@ def plot_norm_and_residual_freq(d, num_i, ax):
 
 
 def freq_norm_and_residual(mol, xc, op, save):
-    d = FrequencyData(mol, xc, op)
+    d = ResponseCalc(mol, xc, op)
 
     xkeys = []
     ykeys = []
