@@ -324,23 +324,15 @@ class MadnessReader:
 
     # TODO get the ground data
     def get_polar_result(self, mol, xc, operator):
-
         freq = self.freq_json[mol][xc][operator]
-
         polar_data = {}
         last_polar_freq = {}
         function_data = {}
-
         time_data = {}
-
         converged = {}
         num_iter_proto = {}
-
         full_params = {}
         full_response_base = {}
-
-        # print(freq)
-
         for f in freq:
             try:
                 rbasej = self.__open_frequency_rbj(mol, xc, operator, f)
@@ -363,7 +355,7 @@ class MadnessReader:
 
             except FileNotFoundError as not_found:
                 print(f, " not found:", not_found)
-                return None
+                pass
 
         return (
             full_params,

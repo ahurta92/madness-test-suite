@@ -2,6 +2,7 @@ from madness_reader_v2 import *
 import json
 import seaborn as sns
 import glob
+import copy
 
 sns.set_context("paper")
 sns.set_theme(style="whitegrid")
@@ -285,4 +286,337 @@ class FrequencyDatabase2(QCDatabase):
                 pass
         return yes
 
+
+class PolarBasisComparisonDatabase:
+    def __init__(self, f_data: FrequencyDatabase2, basis_list):
+        self.basis_list = basis_list
+        self.mol_list = f_data.partition_basis_data(f_data.mol_list,
+                                                    basis_list)  # grab molecules with available Dalton data
+        print(len(self.mol_list))
+        self.data = f_data.get_basis_set_error(self.mol_list, self.basis_list)
+        self.data_list = list(self.data.keys())
+
+    def from_data(self, data):
+        new_data = copy.deepcopy(self)
+        new_data.data = data
+        new_data.mol_list = list(data.molecule.unique())
+        new_data.basis_list = list(data.index.unique())
+        new_data.data_list = list(self.data.keys())
+        return new_data
+
+    def get_outliers(self, basis, dtype, cuttoff):
+        basis_data = self.data.loc[basis]
+
+        outlier_df = basis_data.loc[basis_data.loc[:, dtype].abs() > cuttoff]
+        outlier_list = list(outlier_df.loc[:, 'molecule'])
+
+        out_idx = self.data.molecule.isin(outlier_list)
+
+        keep = self.data.loc[~out_idx, :]
+        remove = self.data.loc[out_idx, :]
+
+        return self.from_data(keep), self.from_data(remove)
+
+    def partition_data_by_type(self, blist, dlist, partition_string):
+        d1 = self.data.loc[self.data.index.isin(blist)]  # not augmented
+        num_data = len(list(d1.index))
+        d2 = self.data.loc[self.data.index.isin(dlist)]  # augmented
+        daug = [True for i in range(num_data)]
+
+        aug_true = pd.Series(daug)
+        aug_true.index = d1.index
+        aug_true.name = partition_string
+
+        aug_false = ~aug_true
+        aug_false.index = d1.index
+        aug_false.name = partition_string
+
+        d2.reset_index(drop=True)
+        d2.index = d1.index
+
+        d2 = pd.concat([d2, aug_true], axis=1)
+        d1 = pd.concat([d1, aug_false], axis=1)
+
+        return self.from_data(pd.concat([d1, d2])).data
+
+
+class PartitionedDatabase(PolarBasisComparisonDatabase):
+    def __init__(self, f_data: FrequencyDatabase2, basis_list, blist, dlist, partition_type):
+        super().__init__(f_data, basis_list)
+        self.full_data = self.data
+        self.partition_type = partition_type
+        self.basis1 = blist
+        self.basis2 = dlist
+
+        self.data = self.partition_data_by_type(blist, dlist, partition_type)
+
+    def get_frequency_dataframe(self):
+        frequency_data = pd.concat([self.data.iloc[:, 0], self.data.loc[:, self.data_list[2:]]], axis=1)
+        drop_list = self.data_list[1:]
+        not_freq = self.data.drop(labels=drop_list, axis=1)
+        not_freq = not_freq.reset_index()
+
+        f_data = frequency_data.loc[:, self.data_list[2:]]
+        f_data = f_data.reset_index(drop=True)
+        full = pd.DataFrame()
+        frequency_i = 0
+        for fd in f_data.keys():
+            alpha_omega = f_data.loc[:, fd]
+            alpha_omega = alpha_omega.reset_index(drop=True)
+            alpha_omega.name = 'error'
+            freq_series = pd.Series([float(frequency_i) for i in range(len(alpha_omega))])
+            freq_series.name = 'frequency'
+            freq_series = freq_series.reset_index(drop=True)
+            frequency_i += 1
+            ai = pd.concat([not_freq, freq_series, alpha_omega], axis=1)
+            ai = ai.reset_index(drop=True)
+            full = pd.concat([full, ai])
+            full = full.reset_index(drop=True)
+        return full
+
+    def get_energy_dataframe(self):
+        drop_list = self.data_list[2:]
+        e_name = self.data_list[1]
+        full = self.data.drop(labels=drop_list, axis=1)
+        full = full.rename(columns={e_name: "error"})
+        full = full.reset_index()
+        new = pd.concat([full.loc[:, full.columns != 'error'], full.loc[:, 'error']], axis=1)
+        return new
+
+
+class BasisErrorDataSet(PartitionedDatabase):
+    def __init__(self, f_data: FrequencyDatabase2, basis_list, blist, dlist, partition_type):
+        super().__init__(f_data, basis_list, blist, dlist, partition_type)
+        self.energy_data = super().get_energy_dataframe()
+        self.freq_data = super().get_frequency_dataframe()
+
+    def get_new_partition(self, basis_list, blist, dlist, partition_type):
+        new_data = copy.deepcopy(self)
+        new_data.data = new_data.partition_data_by_type(blist, dlist, partition_type)
+        new_data.energy_data = new_data.get_energy_dataframe()
+        new_data.freq_data = new_data.get_frequency_dataframe()
+        return new_data
+
+
+def plot_energy(data: BasisErrorDataSet, hue_type, ax, colors: sns.color_palette):
+    df = data.energy_data
+    p1 = sns.violinplot(x=df.basis, y=df.error, hue=df.loc[:, hue_type], ax=ax, split=True,
+                        scale="count", inner="quartile", scale_hue=False, cut=0, bw=.25, palette=colors)
+    p11 = sns.swarmplot(x=df.basis, y=df.error, hue=df.loc[:, hue_type], ax=ax, dodge=True,
+                        palette='dark:.2', size=2.2)
+    ax.axhline(y=0, linewidth=4, ls="--", color="r")
+    handles, labels = ax.get_legend_handles_labels()
+    if hue_type == 'daug':
+        ax.legend(handles[:2], ['aug', 'd-aug'])
+    elif hue_type == 'pC':
+        ax.legend(handles[:2], ['non-polarized', 'polarized'])
+
+    ax.set_title(data.data_list[1])  # fontsize=30)
+    ax.set_xlabel('basis')  # , fontsize=28)
+    ax.set_ylabel('error')
+
+    nblist = len(list(df.basis.unique()))
+    xticks = [i for i in range(nblist)]
+    labels = ['D', 'T', 'Q', '5', '6']
+    ax.set_xticks(xticks, labels=labels[0:nblist])  # fontsize=24)
+
+
+def remove_outliers(fdata):
+    out_mol = fdata[(fdata.basis == 'aug-cc-pVQZ') & (fdata.daug == True) & (fdata.error.abs() > .15)].molecule.unique()
+    no_outliers = fdata[~fdata.molecule.isin(out_mol)]
+    outliers = fdata[fdata.molecule.isin(out_mol)]
+    return no_outliers, outliers
+
+
+def plot_aug_difference(all_data: BasisErrorDataSet, omega, colors: sns.color_palette, remove):
+    data = all_data.freq_data
+    if remove:
+        data, outliers = remove_outliers(data)
+
+    omega_index = data.loc[:, 'frequency'].isin(omega)
+    s_data = data[omega_index]
+    g = sns.FacetGrid(s_data, col='frequency', height=10)
+    i = 0
+    j = 0
+    for omega_i in omega:
+        pdata = s_data[(s_data.frequency == omega_i)]
+        gij = g.axes[0, i]
+        gij.axhline(y=0, linewidth=2, ls="--", color="r")
+        p1 = sns.violinplot(x=pdata.basis, y=pdata.error, hue=pdata.daug, ax=gij, split=True,
+                            scale="count", inner="quartile", scale_hue=False, cut=0, bw=.25, palette=colors)
+
+        p11 = sns.stripplot(x=pdata.basis, y=pdata.error, hue=pdata.daug, ax=gij, size=3.2, dodge=True,
+                            palette='dark:.2')
+        handles, labels = gij.get_legend_handles_labels()
+        gij.legend(handles[:2], ['aug', 'd-aug'])
+
+        gij.set_title(all_data.data_list[omega[i] + 2])  # fontsize=30)
+        gij.set_xlabel('basis')  # , fontsize=28)
+        gij.set_ylabel('error')
+
+        nblist = len(list(data.basis.unique()))
+        xticks = [i for i in range(nblist)]
+        labels = ['D', 'T', 'Q', '5', '6']
+        gij.set_xticks(xticks, labels=labels[0:nblist])  # fontsize=24)
+        j += 1
+        i += 1
+
+    g.refline()
+    # g.map(sns.pointplot,'alpha')#,order=plot_data.loc[:,'omega'].unique())
+    g.add_legend()
+    return g
+
+
+def plot_frequency_dependence(omega, f_data):
+    # aug_index=(f_data.loc[:,'frequency'].isin(omega)) & (f_data.daug==daug)
+    aug_index = (f_data.loc[:, 'frequency'].isin(omega))
+    s_data = f_data[aug_index]
+    g2 = sns.lmplot(x="frequency", y="error", hue='basis', col='daug', x_estimator=np.mean, data=s_data, x_jitter=.14,
+                    order=2, scatter=False, fit_reg=True, sharey=False)
+    return g2
+
+
+def make_frequency_stat_plots(fstats):
+    m_plot = sns.lmplot(x="frequency", y="mean", hue="basis", col='daug', data=fstats, order=2, markers=['.', '+', 'x'],
+                        scatter=True, fit_reg=True)
+    s_plot = sns.lmplot(x="frequency", y="std", hue="basis", col='daug', data=fstats, order=2, markers=['.', '+', 'x'],
+                        scatter=True, fit_reg=True)
+    return m_plot, s_plot
+
+
+def get_freq_stats(fd: pd.DataFrame, basis, daug):
+    fs = []
+    ms = []
+    ss = []
+    bs = []
+    augs = []
+    for freq in fd.frequency.unique():
+        m = fd[(fd.daug == daug) & (fd.basis == basis) & (fd.frequency == freq)].error.mean()
+        s = fd[(fd.daug == daug) & (fd.basis == basis) & (fd.frequency == freq)].error.std()
+        fs.append(freq)
+        ms.append(m)
+        ss.append(s)
+        augs.append(daug)
+        bs.append(basis)
+
+    fsr = pd.Series(fs)
+    fsr.name = 'frequency'
+    bsr = pd.Series(bs)
+    bsr.name = 'basis'
+    asr = pd.Series(augs)
+    asr.name = 'daug'
+    msr = pd.Series(ms)
+    msr.name = 'mean'
+    ssr = pd.Series(ss)
+    ssr.name = 'std'
+
+    b_df = pd.concat([fsr, bsr, asr, msr, ssr], axis=1)
+    return b_df
+
+
+def get_full_freq_stats(df: pd.DataFrame):
+    full = pd.DataFrame()
+    for daug in df.daug.unique():
+        for b in df.basis.unique():
+            full = pd.concat([full, get_freq_stats(df, b, daug)])
+    return full
+
+
+# get monotonoic molecules positive and neagive
+def get_norm_class(data: pd.DataFrame, omega: float, daug: bool):
+    DZ = data[(data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVDZ')]
+    TZ = data[(data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVTZ')]
+    QZ = data[(data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVQZ')]
+    VZ = data[(data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pV5Z')]
+
+    DZ.reset_index(inplace=True)
+    TZ.reset_index(inplace=True)
+    QZ.reset_index(inplace=True)
+    VZ.reset_index(inplace=True)
+
+    DTF = ~(DZ.error.abs() > TZ.error.abs())
+    TQF = ~(TZ.error.abs() > QZ.error.abs())
+    QVF = ~(QZ.error.abs() > VZ.error.abs())
+
+    norm = {"Absolute": list(DZ[~DTF & ~TQF & ~QVF].molecule.unique()),
+            "T": list(DZ[DTF & ~TQF & ~QVF].molecule.unique()),
+            "Q": list(DZ[~DTF & TQF & ~QVF].molecule.unique()),
+            "5": list(DZ[~DTF & ~TQF & QVF].molecule.unique()),
+            "TQ": list(DZ[DTF & TQF & ~QVF].molecule.unique()),
+            "T5": list(DZ[DTF & ~TQF & QVF].molecule.unique()),
+            "Q5": list(DZ[~DTF & TQF & QVF].molecule.unique()),
+            "TQ5": list(DZ[DTF & TQF & QVF].molecule.unique())}
+    return norm
+
+
+def get_mono_class(data, omega, daug):
+    DZ = data[(data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVDZ')]
+    TZ = data[(data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVTZ')]
+    QZ = data[(data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVQZ')]
+    VZ = data[(data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pV5Z')]
+
+    DZ.reset_index(inplace=True)
+    TZ.reset_index(inplace=True)
+    QZ.reset_index(inplace=True)
+    VZ.reset_index(inplace=True)
+
+    MONO_DT = (DZ.error.abs() > TZ.error.abs()) & ((DZ.error * TZ.error) > 0)
+    MONO_TQ = (TZ.error.abs() > QZ.error.abs()) & ((TZ.error * QZ.error) > 0)
+    MONO_QV = (QZ.error.abs() > VZ.error.abs()) & ((QZ.error * VZ.error) > 0)
+
+    mono_class = {}
+    MONO_DZ = DZ[MONO_DT & MONO_TQ & MONO_QV]
+    NONMONO = DZ[~(MONO_DT & MONO_TQ & MONO_QV)].molecule.unique()
+    MONO_POS = MONO_DZ[MONO_DZ.error > 0].molecule.unique()
+    MONO_NEG = MONO_DZ[MONO_DZ.error <= 0].molecule.unique()
+    DZ = data[
+        (data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVDZ') & data.molecule.isin(NONMONO)]
+    TZ = data[
+        (data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVTZ') & data.molecule.isin(NONMONO)]
+    QZ = data[
+        (data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pVQZ') & data.molecule.isin(NONMONO)]
+    VZ = data[
+        (data.frequency == omega) & (data.daug == daug) & (data.basis == 'aug-cc-pV5Z') & data.molecule.isin(NONMONO)]
+    DZ.reset_index(inplace=True)
+    TZ.reset_index(inplace=True)
+    QZ.reset_index(inplace=True)
+    VZ.reset_index(inplace=True)
+
+    DTF = ~((DZ.error.abs() > TZ.error.abs()) & ((DZ.error * TZ.error) > 0))
+    TQF = ~((TZ.error.abs() > QZ.error.abs()) & ((TZ.error * QZ.error) > 0))
+    QVF = ~((QZ.error.abs() > VZ.error.abs()) & ((QZ.error * VZ.error) > 0))
+
+    mono_class["Positive"] = list(MONO_POS)
+    mono_class["Negative"] = list(MONO_NEG)
+
+    mono_class["T"] = list(DZ[DTF & ~TQF & ~QVF].molecule.unique())
+    mono_class["Q"] = list(DZ[~DTF & TQF & ~QVF].molecule.unique())
+    mono_class["5"] = list(DZ[~DTF & ~TQF & QVF].molecule.unique())
+
+    mono_class["TQ"] = list(DZ[DTF & TQF & ~QVF].molecule.unique())
+    mono_class["Q5"] = list(DZ[DTF & ~TQF & QVF].molecule.unique())
+    mono_class["Q5"] = list(DZ[~DTF & TQF & QVF].molecule.unique())
+
+    mono_class["TQ5"] = list(DZ[DTF & TQF & QVF].molecule.unique())
+    return mono_class
+
+
+def classify_data(data, mol_key):
+    clf = []
+    for cl, mols in mol_key.items():
+        num_mols = len(mols)
+        class_series = pd.Series([cl for i in range(num_mols)])
+        class_series.name = 'mol_key'
+        mol_series = pd.Series(mols)
+        mol_series.name = 'molecule'
+        clf.append(pd.concat([class_series, mol_series], axis=1))
+    convergence_class = pd.concat(clf)
+    mol_data = copy.copy(data)
+    mol_data.insert(len(data.columns), 'mol_key', pd.Series(dtype=str))
+    for index, row in convergence_class.iterrows():
+        # print(row['class'], row['molecule'])
+        class_r = row['mol_key']
+        mol_r = row['molecule']
+        mol_data.loc[data.molecule == mol_r, "mol_key"] = class_r
+    return mol_data.dropna()
 
