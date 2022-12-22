@@ -536,9 +536,9 @@ class ResponseCalc:
         iters = self.num_iter_proto[f_key]
 
         for pc in iters:
-            for i in range(3):
+            for i in range(2):
                 ax[i].axvline(x=pc, ymin=0, ymax=1, c="black", linestyle="dashed")
-        for i in range(3):
+        for i in range(2):
             if i != 0:
                 ax[i].axhline(y=dconv, xmin=0, xmax=iters[-1], c="black", linestyle="dashed", )
             ax[i].grid(which="both")
