@@ -545,7 +545,7 @@ class ResponseCalc:
             ax[i].minorticks_on()
             ax[i].tick_params(which="both", top="on", left="on", right="on", bottom="on", )
 
-    def plot_freq_norm_and_residual(self, save):
+    def plot_freq_norm_and_residual(self, save, only_static=False):
         xkeys = []
         ykeys = []
         for i in range(self.num_states):
@@ -556,7 +556,10 @@ class ResponseCalc:
         num_freqs = len(freq)
         sns.set_theme(style="darkgrid")
         sns.set_context("talk", font_scale=1.5, rc={"lines.linewidth": 2.5})
-        for i in range(num_ran):
+        num_plot = num_ran
+        if only_static:
+            num_plot = 1
+        for i in range(num_plot):
             fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(25, 9), constrained_layout=True)
             title = 'Polarizability Convergence: ' + self.mol + r'  $\omega({}/{})$'.format(i, num_freqs - 1)
             fig.suptitle(title)
