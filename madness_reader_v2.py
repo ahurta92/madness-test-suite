@@ -135,17 +135,14 @@ class MadnessReader:
             d_keys.append("D" + str(i))
             ad_keys.append("abs_D" + str(i))
 
-        xij_keys = []
         axij_keys = []
 
         for i in range(num_states):
             for j in range(num_orbitals):
-                xij_keys.append('x' + str(i) + str(j))
                 axij_keys.append('abs_x' + str(i) + str(j))
 
         for i in range(num_states):
             for j in range(num_orbitals):
-                xij_keys.append('y' + str(i) + str(j))
                 axij_keys.append('abs_y' + str(i) + str(j))
         # print(xij_keys)
         # print(axij_keys)
@@ -157,7 +154,6 @@ class MadnessReader:
         d_norm_dfs = []
         d_abs_error_dfs = []
 
-        xij_norm_dfs = []
         xij_error_dfs = []
 
         protos = []
@@ -180,8 +176,6 @@ class MadnessReader:
             d_norms = np.empty((num_iters, num_states))
             d_abs_error = np.empty((num_iters, num_states))
 
-            xij_norms = np.empty((num_iters, num_states * 2 * num_orbitals))
-            xij_abs_error = np.empty((num_iters, num_states * 2 * num_orbitals))
 
             i = 0
             for iter in proto["iter_data"]:
@@ -190,9 +184,6 @@ class MadnessReader:
 
                 d_norms[i, :] = self.__tensor_to_numpy(iter["rho_norms"]).flatten()
                 d_abs_error[i, :] = self.__tensor_to_numpy(iter["rho_abs_error"]).flatten()
-
-                xij_norms[i, :] = self.__tensor_to_numpy(iter["xij_norms"]).flatten()
-                xij_abs_error[i, :] = self.__tensor_to_numpy(iter["xij_abs_error"]).flatten()
 
                 i += 1
                 iters.append(iter_p)
@@ -206,8 +197,6 @@ class MadnessReader:
             d_norm_dfs.append(pd.DataFrame(d_norms, columns=d_keys))
             d_abs_error_dfs.append(pd.DataFrame(d_abs_error, columns=ad_keys))
 
-            xij_norm_dfs.append(pd.DataFrame(xij_norms, columns=xij_keys))
-            xij_error_dfs.append(pd.DataFrame(xij_abs_error, columns=axij_keys))
         for j in range(1, num_iters_per_protocol.__len__()):
             num_iters_per_protocol[j] = (num_iters_per_protocol[j] + num_iters_per_protocol[j - 1])
 
@@ -217,12 +206,10 @@ class MadnessReader:
         d1 = pd.concat(d_norm_dfs)
         da = pd.concat(d_abs_error_dfs)
 
-        f1 = pd.concat(xij_norm_dfs)
-        fa = pd.concat(xij_error_dfs)
 
         iters_df = pd.Series(iters)
         iters_df.name = "iterations"
-        full = pd.concat([x1, xa, d1, da, f1, fa], axis=1)
+        full = pd.concat([x1, xa, d1, da ], axis=1)
         full = pd.concat([iters_df, full.reset_index(drop=True)], axis=1)
         full.index += 1
 
@@ -448,21 +435,18 @@ class ResponseCalc:
             d_keys.append("D" + str(i))
             ad_keys.append("abs_D" + str(i))
 
-        xij_keys = []
         axij_keys = []
 
         for i in range(self.num_states):
             for j in range(self.num_orbitals):
-                xij_keys.append('x' + str(i) + str(j))
                 axij_keys.append('abs_x' + str(i) + str(j))
 
         for i in range(self.num_states):
             for j in range(self.num_orbitals):
-                xij_keys.append('y' + str(i) + str(j))
                 axij_keys.append('abs_y' + str(i) + str(j))
 
         return {"x_norms": x_keys, "x_abs_error": ax_keys, "d_norms": d_keys,
-                "d_abs_error": ad_keys, "xij_norms": xij_keys, "xij_abs_error": axij_keys}
+                "d_abs_error": ad_keys,  "xij_abs_error": axij_keys}
 
     def __get_ground_precision(self):
         gprec = self.ground_info["precision"]
