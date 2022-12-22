@@ -577,7 +577,7 @@ class FrequencyData:
         return self.thresh_data
 
     def compare_dalton(self, basis, base_dir):
-        dalton_reader = Dalton(base_dir)
+        dalton_reader = Dalton(base_dir, False)
         ground_dalton, response_dalton = dalton_reader.get_frequency_result(
             self.mol, self.xc, self.operator, basis
         )
@@ -631,13 +631,11 @@ class FrequencyData:
         comp_df.plot(title=str(self.mol))
 
     def compare_polar_basis_list(self, ij_j_list, basis_list):
-        dalton_reader = Dalton()
+        dalton_reader = Dalton(self.data_dir, False)
 
         freq = pd.Series(self.polar_df.index.values)
         freq.name = "Frequency"
-
         compare_dict = [freq]
-
         for basis in basis_list:
             ground_dalton, response_dalton = dalton_reader.get_frequency_result(
                 self.mol, self.xc, self.operator, basis
@@ -652,7 +650,7 @@ class FrequencyData:
         polar_df = pd.concat(compare_dict, axis=1)
         polar_df.set_index("Frequency", inplace=True)
 
-        polar_df.plot(title=self.mol + " Polarizability " + ij_j_list)
+        polar_df.plot(title=self.mol + " Polarizability ")
 
         # Epolar_df = pd.concat([freq, polar_df], axis=1)
 
@@ -959,8 +957,8 @@ def plot_norm_and_residual_i(d, num_i, ax):
         ax[i].tick_params(which="both", top="on", left="on", right="on", bottom="on", )
 
 
-def freq_norm_and_residual(mol, xc, op, save):
-    d = FrequencyData(mol, xc, op)
+def freq_norm_and_residual(mol, xc, op, save, dir):
+    d = FrequencyData(mol, xc, op, dir)
 
     xkeys = []
     ykeys = []
@@ -969,7 +967,7 @@ def freq_norm_and_residual(mol, xc, op, save):
         xkeys.append("x" + str(i))
         ykeys.append("y" + str(i))
 
-    mad_read = MadnessReader()
+    mad_read = MadnessReader(dir)
     freq = mad_read.freq_json[mol][xc][op]
 
     num_ran = len(d.converged)

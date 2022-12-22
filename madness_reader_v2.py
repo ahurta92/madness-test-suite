@@ -176,7 +176,6 @@ class MadnessReader:
 
             x_norms = np.empty((num_iters, num_states))
             x_abs_error = np.empty((num_iters, num_states))
-            x_rel_error = np.empty((num_iters, num_states))
 
             d_norms = np.empty((num_iters, num_states))
             d_abs_error = np.empty((num_iters, num_states))
@@ -188,7 +187,6 @@ class MadnessReader:
             for iter in proto["iter_data"]:
                 x_norms[i, :] = self.__tensor_to_numpy(iter["x_norms"]).flatten()
                 x_abs_error[i, :] = self.__tensor_to_numpy(iter["x_abs_error"]).flatten()
-                x_rel_error[i, :] = self.__tensor_to_numpy(iter["x_rel_error"]).flatten()
 
                 d_norms[i, :] = self.__tensor_to_numpy(iter["rho_norms"]).flatten()
                 d_abs_error[i, :] = self.__tensor_to_numpy(iter["rho_abs_error"]).flatten()
@@ -204,7 +202,6 @@ class MadnessReader:
 
             x_norm_dfs.append(pd.DataFrame(x_norms, columns=x_keys))
             x_abs_error_dfs.append(pd.DataFrame(x_abs_error, columns=ax_keys))
-            x_rel_error_dfs.append(pd.DataFrame(x_rel_error, columns=rx_keys))
 
             d_norm_dfs.append(pd.DataFrame(d_norms, columns=d_keys))
             d_abs_error_dfs.append(pd.DataFrame(d_abs_error, columns=ad_keys))
@@ -216,7 +213,6 @@ class MadnessReader:
 
         x1 = pd.concat(x_norm_dfs)
         xa = pd.concat(x_abs_error_dfs)
-        xr = pd.concat(x_rel_error_dfs)
 
         d1 = pd.concat(d_norm_dfs)
         da = pd.concat(d_abs_error_dfs)
@@ -226,7 +222,7 @@ class MadnessReader:
 
         iters_df = pd.Series(iters)
         iters_df.name = "iterations"
-        full = pd.concat([x1, xa, xr, d1, da, f1, fa], axis=1)
+        full = pd.concat([x1, xa, d1, da, f1, fa], axis=1)
         full = pd.concat([iters_df, full.reset_index(drop=True)], axis=1)
         full.index += 1
 
@@ -372,7 +368,6 @@ class MadnessReader:
 def get_function_keys(num_states, num_orbitals):
     x_keys = []
     ax_keys = []
-    rx_keys = []
 
     d_keys = []
     ad_keys = []
@@ -380,7 +375,6 @@ def get_function_keys(num_states, num_orbitals):
     for i in range(num_states):
         x_keys.append("X" + str(i))
         ax_keys.append("abs_X" + str(i))
-        rx_keys.append("rel_X" + str(i))
 
         d_keys.append("D" + str(i))
         ad_keys.append("abs_D" + str(i))
@@ -398,7 +392,7 @@ def get_function_keys(num_states, num_orbitals):
             xij_keys.append('y' + str(i) + str(j))
             axij_keys.append('abs_y' + str(i) + str(j))
 
-    return {"x_norms": x_keys, "x_abs_error": ax_keys, "x_rel_error": rx_keys, "d_norms": d_keys,
+    return {"x_norms": x_keys, "x_abs_error": ax_keys, "d_norms": d_keys,
             "d_abs_error": ad_keys, "xij_norms": xij_keys, "xij_abs_error": axij_keys}
 
 
@@ -450,7 +444,6 @@ class ResponseCalc:
         for i in range(self.num_states):
             x_keys.append("X" + str(i))
             ax_keys.append("abs_X" + str(i))
-            rx_keys.append("rel_X" + str(i))
 
             d_keys.append("D" + str(i))
             ad_keys.append("abs_D" + str(i))
@@ -468,7 +461,7 @@ class ResponseCalc:
                 xij_keys.append('y' + str(i) + str(j))
                 axij_keys.append('abs_y' + str(i) + str(j))
 
-        return {"x_norms": x_keys, "x_abs_error": ax_keys, "x_rel_error": rx_keys, "d_norms": d_keys,
+        return {"x_norms": x_keys, "x_abs_error": ax_keys, "d_norms": d_keys,
                 "d_abs_error": ad_keys, "xij_norms": xij_keys, "xij_abs_error": axij_keys}
 
     def __get_ground_precision(self):
@@ -526,7 +519,6 @@ class ResponseCalc:
     def __plot_norm_and_residual_freq(self, num_i, ax):
         fkeys = get_function_keys(self.num_states, self.num_orbitals)
         abs_keys = fkeys["x_abs_error"]
-        rel_keys = fkeys["x_rel_error"]
         chi_norms_keys = fkeys["x_norms"]
 
         f_key = list(self.function_data.keys())[num_i]
@@ -534,14 +526,10 @@ class ResponseCalc:
 
         chi_norms_i = self.function_data[f_key][chi_norms_keys]
         bsh_residuals_i = self.function_data[f_key][abs_keys]
-        rel_residuals_i = self.function_data[f_key][rel_keys]
 
         chi_norms_i.plot(ax=ax[0], logy=False, legend=True, colormap='Accent', title='Chi Norms', marker='*',
                          markersize=12, grid=True)
         bsh_residuals_i.plot(ax=ax[1], logy=True, legend=True, colormap='Accent', title='Absolute Residuals',
-                             marker='*', markersize=12,
-                             grid=True)
-        rel_residuals_i.plot(ax=ax[2], logy=True, legend=True, colormap='Accent', title='Relative Residuals',
                              marker='*', markersize=12,
                              grid=True)
 
@@ -569,7 +557,7 @@ class ResponseCalc:
         sns.set_theme(style="darkgrid")
         sns.set_context("talk", font_scale=1.5, rc={"lines.linewidth": 2.5})
         for i in range(num_ran):
-            fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(25, 9), constrained_layout=True)
+            fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(25, 9), constrained_layout=True)
             title = 'Polarizability Convergence: ' + self.mol + r'  $\omega({}/{})$'.format(i, num_freqs - 1)
             fig.suptitle(title)
             self.__plot_norm_and_residual_freq(i, ax)
