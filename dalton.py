@@ -11,16 +11,13 @@ from daltonToJson import daltonToJson
 
 
 class Dalton:
-    DALROOT = None
-
+    dalton_dir = None
     @classmethod
     def __init__(self, base_dir, run_new):
-
         self.run = run_new
-        self.base_dir = base_dir
-        self.DALROOT = os.path.join(self.base_dir, os.pardir)
-        self.DALROOT += "/dalton/"
-        # here i can change PROOT to my directory of choise
+        self.base_dir = base_dir# what is my base directory?
+        self.dalton_dir = os.path.join(os.base_dir, 'dalton')
+        # here I can change PROOT to my directory of chocse
         if shutil.which("mpirun") != None:
             self.use_mpi = True
             self.Np = int(os.cpu_count() / 8)
@@ -77,7 +74,7 @@ class Dalton:
 
         dalton_inp.append("**END OF DALTON INPUT")
         dalton_inp = "\n".join(dalton_inp)
-        run_dir = self.DALROOT + xc + "/" + molname + "/" + operator
+        run_dir = self.dalton_dir + xc + "/" + molname + "/" + operator
         if not os.path.exists(run_dir):
             os.makedirs(run_dir)
         # Here I read the madness mol file from the molecules directory
@@ -148,7 +145,7 @@ class Dalton:
 
         dalton_inp.append("**END OF DALTON INPUT")
         dalton_inp = "\n".join(dalton_inp)
-        run_dir = self.DALROOT + xc + "/" + molname + "/" + "excited-state"
+        run_dir = self.dalton_dir + xc + "/" + molname + "/" + "excited-state"
         mad_to_dal = madnessToDalton(self.base_dir)
         if not os.path.exists(run_dir):
             os.makedirs(run_dir)
