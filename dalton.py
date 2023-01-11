@@ -12,10 +12,11 @@ from daltonToJson import daltonToJson
 
 class Dalton:
     dalton_dir = None
+
     @classmethod
     def __init__(self, base_dir, run_new):
         self.run = run_new
-        self.base_dir = base_dir# what is my base directory?
+        self.base_dir = base_dir  # what is my base directory?
         self.dalton_dir = os.path.join(os.base_dir, 'dalton')
         # here I can change PROOT to my directory of chocse
         if shutil.which("mpirun") != None:
