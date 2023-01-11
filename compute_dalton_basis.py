@@ -14,13 +14,20 @@ daug_basis = ['d-aug-cc-pVDZ','d-aug-cc-pVTZ','d-aug-cc-pVQZ','d-aug-cc-pV5Z',]
 aug_pc_basis = ['aug-cc-pCVDZ','aug-cc-pCVTZ','aug-cc-pCVQZ',]
 daug_pc_basis = ['aug-cc-pCVDZ','aug-cc-pCVTZ','aug-cc-pCVQZ',]
 basis_list=aug_basis+daug_basis+aug_pc_basis+daug_pc_basis
-BASEDIR='/gpfs/projects/rjh/adrian/fd_compare'
-
+BASEDIR=str(os.getcwd())
 runner = Dalton(BASEDIR,True)
 runner.Np = num_proc
 
 for basis in basis_list:
     try:
         result = runner.get_polar_json(mol, 'hf', 'dipole', basis)
-    except:
-        print("Ran into exception")
+        print(result)
+        print(BASEDIR)
+        print(os.curdir)
+
+    except FileNotFoundError as f:
+        print(f)
+        os.chdir(BASEDIR)
+        pass
+
+

@@ -17,7 +17,7 @@ class Dalton:
     def __init__(self, base_dir, run_new):
         self.run = run_new
         self.base_dir = base_dir  # what is my base directory?
-        self.dalton_dir = os.path.join(os.base_dir, 'dalton')
+        self.dalton_dir = os.path.join(self.base_dir, 'dalton')
         # here I can change PROOT to my directory of chocse
         if shutil.which("mpirun") != None:
             self.use_mpi = True
@@ -75,7 +75,7 @@ class Dalton:
 
         dalton_inp.append("**END OF DALTON INPUT")
         dalton_inp = "\n".join(dalton_inp)
-        run_dir = self.dalton_dir + xc + "/" + molname + "/" + operator
+        run_dir = self.dalton_dir +"/"+ xc + "/" + molname + "/" + operator
         if not os.path.exists(run_dir):
             os.makedirs(run_dir)
         # Here I read the madness mol file from the molecules directory
@@ -97,7 +97,6 @@ class Dalton:
 
     def __run_dalton(self, rdir, dfile, mfile):
         dalton = shutil.which('dalton')
-        print(dalton)
         # Change to run directory
         os.chdir(rdir)
         # dalton [.dal] [.mol]
@@ -112,6 +111,7 @@ class Dalton:
         process = subprocess.Popen(daltonCommand.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
         os.chdir(self.base_dir)
+        print("Changed Directory to ",self.base_dir)
         return output, error
 
     @staticmethod
@@ -260,11 +260,18 @@ class Dalton:
             if self.run:
                 print("Try and run molecule ", mol)
                 d_out, d_error = self.__run_dalton(run_directory, dal_input, mol_input)
-                print(d_out, d_error)
-                with open(outfile, "r") as daltonOutput:
-                    dj = daltonToJson()
-                    data = self.__create_frequency_json(dj.convert(daltonOutput), basis)
+                print("Finshed running  ",mol," in ",run_directory)
+                print(d_error)
+                try:
+
+                    with open(outfile, "r") as daltonOutput:
+                        dj = daltonToJson()
+                        data = self.__create_frequency_json(dj.convert(daltonOutput), basis)
+                except ( IndexError) as e:
+                    print("most likely BASIS not found",d_out)
+                    pass
             else:
+                print("Not sure what's up")
                 pass
         return data
 
