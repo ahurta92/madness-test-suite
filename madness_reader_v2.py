@@ -12,16 +12,17 @@ import numpy as np
 from madnessToDaltony import *
 
 
+def tensor_to_numpy(j):
+    array = np.empty(j["size"])
+    array[:] = j["vals"]
+    return np.reshape(array, tuple(j["dims"]))
+
+
 class MadnessReader:
     def __init__(self, data_dir):
         self.data_dir = data_dir
         with open(self.data_dir + "/molecules/frequency.json") as json_file:
             self.freq_json = json.loads(json_file.read())
-
-    def __tensor_to_numpy(self, j):
-        array = np.empty(j["size"])
-        array[:] = j["vals"]
-        return np.reshape(array, tuple(j["dims"]))
 
     def __read_protocol_excited_state_data(self, protocol_data: json, num_states, num_orbitals):
         num_protocols = protocol_data.__len__()
@@ -42,7 +43,7 @@ class MadnessReader:
             i = 0
             for iter in proto["property_data"]:
                 # diagonalize the polarizability
-                alpha = self.__tensor_to_numpy(iter["omega"]).flatten()
+                alpha = tensor_to_numpy(iter["omega"]).flatten()
                 # alpha=.5*(alpha+alpha.transpose())
                 # w, v = LA.eig(alpha)
                 # print("alpha : ",alpha)
@@ -81,11 +82,7 @@ class MadnessReader:
             polar_data = np.empty((num_iters, 9))
             i = 0
             for iter in proto["property_data"]:
-                # diagonalize the polarizability
-                alpha = self.__tensor_to_numpy(iter["polar"]).flatten()
-                # alpha=.5*(alpha+alpha.transpose())
-                # w, v = LA.eig(alpha)
-                # print("alpha : ",alpha)
+                alpha = tensor_to_numpy(iter["polar"]).flatten()
                 polar_data[i, :] = alpha
                 i += 1
                 iters.append(iter_p)
@@ -106,27 +103,13 @@ class MadnessReader:
         return final_polar
 
     def __read_response_protocol_data(self, protocol_data: json, num_states, num_orbitals):
-
-        # reading function data
-        # x norms X1 ... Xm
-        # x abs error aX1 ... aXM
-        # x rel error rX1 ... rXM
-
-        # xij norms x11....xmn y11 ymn size=s*m*n
-        # xij abs error x11....xmn y11 ymn size=s*m*n
-
-        # rho norms D1 ... DM
-        # rho abs error aD1 ... aDM
-
         num_protocols = protocol_data.__len__()
-        # create the data keys
+        # print("Number of protocols ", num_protocols)
         x_keys = []
         ax_keys = []
         rx_keys = []
-
         d_keys = []
         ad_keys = []
-
         for i in range(num_states):
             x_keys.append("X" + str(i))
             ax_keys.append("abs_X" + str(i))
@@ -134,66 +117,47 @@ class MadnessReader:
 
             d_keys.append("D" + str(i))
             ad_keys.append("abs_D" + str(i))
-
         axij_keys = []
-
         for i in range(num_states):
             for j in range(num_orbitals):
                 axij_keys.append('abs_x' + str(i) + str(j))
-
         for i in range(num_states):
             for j in range(num_orbitals):
                 axij_keys.append('abs_y' + str(i) + str(j))
-        # print(xij_keys)
-        # print(axij_keys)
-
         x_norm_dfs = []
         x_abs_error_dfs = []
-        x_rel_error_dfs = []
-
         d_norm_dfs = []
         d_abs_error_dfs = []
-
-        xij_error_dfs = []
-
         protos = []
         kprotos = []
         iters = []
         iter_p = 0
         num_iters_per_protocol = []
-        for proto in protocol_data:
+        for kk in range(num_protocols):
+            proto = protocol_data[kk]
+            # print("proto_iter_data", kk, proto["iter_data"])
+            num_iters = proto["iter_data"].__len__()
+            # print(" number of iterations in this stage: ", num_iters)
             protos.append(proto["proto"])
             kprotos.append(proto["k"])
-            num_iters = proto["iter_data"].__len__()
             num_iters_per_protocol.append(num_iters)
-
             proto_array = np.ones((num_iters, 1)) * proto["proto"]
             kproto_array = np.ones((num_iters, 1)) * proto["k"]
-
             x_norms = np.empty((num_iters, num_states))
             x_abs_error = np.empty((num_iters, num_states))
-
             d_norms = np.empty((num_iters, num_states))
             d_abs_error = np.empty((num_iters, num_states))
-
-
             i = 0
             for iter in proto["iter_data"]:
-                x_norms[i, :] = self.__tensor_to_numpy(iter["x_norms"]).flatten()
-                x_abs_error[i, :] = self.__tensor_to_numpy(iter["x_abs_error"]).flatten()
-
-                d_norms[i, :] = self.__tensor_to_numpy(iter["rho_norms"]).flatten()
-                d_abs_error[i, :] = self.__tensor_to_numpy(iter["rho_abs_error"]).flatten()
-
+                x_norms[i, :] = tensor_to_numpy(iter["x_norms"]).flatten()
+                x_abs_error[i, :] = tensor_to_numpy(iter["x_abs_error"]).flatten()
+                d_norms[i, :] = tensor_to_numpy(iter["rho_norms"]).flatten()
+                d_abs_error[i, :] = tensor_to_numpy(iter["rho_abs_error"]).flatten()
                 i += 1
                 iters.append(iter_p)
                 iter_p += 1
-
-            # num_iters_per_protocol[-1] -= 1
-
             x_norm_dfs.append(pd.DataFrame(x_norms, columns=x_keys))
             x_abs_error_dfs.append(pd.DataFrame(x_abs_error, columns=ax_keys))
-
             d_norm_dfs.append(pd.DataFrame(d_norms, columns=d_keys))
             d_abs_error_dfs.append(pd.DataFrame(d_abs_error, columns=ad_keys))
 
@@ -206,34 +170,41 @@ class MadnessReader:
         d1 = pd.concat(d_norm_dfs)
         da = pd.concat(d_abs_error_dfs)
 
-
         iters_df = pd.Series(iters)
         iters_df.name = "iterations"
-        full = pd.concat([x1, xa, d1, da ], axis=1)
+        full = pd.concat([x1, xa, d1, da], axis=1)
         full = pd.concat([iters_df, full.reset_index(drop=True)], axis=1)
         full.index += 1
-
-        # final_bsh_norms = pd.concat([iters_df,full_df], ignore_index=True)
 
         return num_iters_per_protocol, full
 
     def __open_ground_json(self, mol, xc):
-
         moldir = self.data_dir + "/" + xc + "/" + mol
         jsonf = "moldft.calc_info.json"
-
         path = "/".join([moldir, jsonf])
-        # print("mad_path",path)
-
         with open(path) as json_file:
             response_j = json.loads(json_file.read())
-
         return response_j
+
+    def __open_ground_scf_json(self, mol, xc):
+        moldir = self.data_dir + "/" + xc + "/" + mol
+        jsonf = "moldft.scf_info.json"
+        path = "/".join([moldir, jsonf])
+        try:
+            with open(path) as json_file:
+                scf_j = json.loads(json_file.read())
+        except FileNotFoundError as f:
+            print(f)
+            scf_j = None
+
+        return scf_j
 
     def get_ground_scf_data(self, mol, xc):
 
         j = self.__open_ground_json(mol, xc)
-
+        scf_j = self.__open_ground_scf_json(mol, xc)
+        if scf_j:
+            j.update(scf_j[0])
         params = j["parameters"]
         scf_e_data = j["scf_e_data"]
         timing = j["wall_time"]
@@ -318,12 +289,12 @@ class MadnessReader:
         full_response_base = {}
         for f in freq:
             try:
-                rbasej = self.__open_frequency_rbj(mol, xc, operator, f)
-                full_response_base[str(f)] = rbasej
-                converged_f = rbasej["converged"]
+                response_base_json = self.__open_frequency_rbj(mol, xc, operator, f)
+                full_response_base[str(f)] = response_base_json
+                converged_f = response_base_json["converged"]
                 # print(converged_f)
                 params, num_iters_per_protocol, full_function_data, polarizability_data = self.__get_polar_data(
-                    rbasej)
+                    response_base_json)
                 full_params[str(f)] = params
                 polar_data[str(f)] = polarizability_data
                 # print(polarizability_data)
@@ -334,7 +305,7 @@ class MadnessReader:
                 # fdata[str(f)] = full_function_data.iloc[-1, :]
                 converged[str(f)] = converged_f
 
-                time_data[str(f)] = rbasej["time_data"]
+                time_data[str(f)] = response_base_json["time_data"]
 
             except FileNotFoundError as not_found:
                 print(f, " not found:", not_found)
@@ -401,6 +372,7 @@ class ResponseCalc:
         self.ground_e = {}
         for e_name in e_name_list:
             self.ground_e[e_name] = self.ground_scf_data[e_name][-1]
+
         (
             self.params,
             self.time_data,
@@ -411,6 +383,7 @@ class ResponseCalc:
             self.full_polar_data,
             self.polar_data,
         ) = mad_reader.get_polar_result(mol, xc, operator)
+
         self.num_states = self.params['0.0']["states"]
         self.num_orbitals = self.params['0.0']["num_orbitals"]
         self.function_keys = self.get_function_keys()
@@ -446,7 +419,7 @@ class ResponseCalc:
                 axij_keys.append('abs_y' + str(i) + str(j))
 
         return {"x_norms": x_keys, "x_abs_error": ax_keys, "d_norms": d_keys,
-                "d_abs_error": ad_keys,  "xij_abs_error": axij_keys}
+                "d_abs_error": ad_keys, "xij_abs_error": axij_keys}
 
     def __get_ground_precision(self):
         gprec = self.ground_info["precision"]
@@ -484,8 +457,7 @@ class ResponseCalc:
             if data["converged"]:
                 fdo = self.function_data[om].iloc[-1, 1:]
                 pdo = self.polar_data.loc[om, polar_keys]
-                fd = {}
-                fd['frequency'] = om
+                fd = {'frequency': om}
                 freq = pd.Series(fd)
                 r_prec = self.__get_response_precision(om)
                 ff.append(pd.concat([freq, g_precision, r_prec, fdo]))
@@ -647,7 +619,7 @@ def create_polar_table(mol, xc, basis_list, xx, database_dir):
         raw_f = r"{}".format(str(f))
         # names.append(r'$$\alpha_{xx}('+raw_f+r')$$')
         names.append("a(" + "{:.3f}".format(f) + ")")
-    print(xx_data)
+    # print(xx_data)
     r_dfs = []
     for i in range(len(freq)):
         r_dfs.append(pd.Series(xx_data[i]))
@@ -799,7 +771,7 @@ def polar_overview(basis, excluded):
     for g in glob.glob("molecules/*.mol"):
         m = g.split("/")
         mol = m[1].split(".")[0]
-        print(mol)
+        # print(mol)
         if mol not in excluded:
             data[mol] = create_polar_mol_series(mol, basis)
 
@@ -845,9 +817,9 @@ def plot_norm_and_residual_excited(d, num_i, ax):
     rel_keys = fkeys["x_rel_error"]
     chi_norms_keys = fkeys["x_norms"]
 
-    print("chi norms key", chi_norms_keys)
-    print("abs norms key", abs_keys)
-    print("rel norms key", rel_keys)
+    # print("chi norms key", chi_norms_keys)
+    # print("abs norms key", abs_keys)
+    # print("rel norms key", rel_keys)
 
     params = d.params
     dconv = params["dconv"]
@@ -863,7 +835,7 @@ def plot_norm_and_residual_excited(d, num_i, ax):
                          grid=True)
 
     iters = d.num_iter_proto
-    print(iters)
+    # print(iters)
 
     for pc in iters:
         for i in range(3):

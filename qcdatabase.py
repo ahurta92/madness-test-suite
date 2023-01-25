@@ -6,9 +6,6 @@ import json
 import seaborn as sns
 import glob
 
-sns.set_context("paper")
-sns.set_theme(style="whitegrid")
-
 
 def chunkify(lst, n):
     return [lst[i::n] for i in range(n)]

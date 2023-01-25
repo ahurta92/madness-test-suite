@@ -1,14 +1,10 @@
-import sys
-import string
-import itertools
 import json
 from collections import OrderedDict
-
-from matplotlib.pyplot import polar
 
 
 class daltonToJson:
     def __init__(self):
+        self.dipole_dict = None
         self.polar_dict = None
         self.calcSetup = {}
         self.calcRes = {}
@@ -20,7 +16,13 @@ class daltonToJson:
         self.subTask = False
 
         self.xx = 0
+        self.xy = 0
+        self.xz = 0
+        self.yx = 0
         self.yy = 0
+        self.yz = 0
+        self.zx = 0
+        self.zy = 0
         self.zz = 0
 
     def convert(self, streamIn):
@@ -34,6 +36,7 @@ class daltonToJson:
                 ),
                 ("Linear Response calculation", self.readResponse),
                 ("Singlet electronic excitation energies", self.readExcited),
+                ("Nuclear contribution to dipole moments", self.readDipole),
             ]
         )
         collectingInput = False
@@ -51,7 +54,6 @@ class daltonToJson:
                         self.setupCount += 1
                     my_tasks[myKey](line, streamIn)
             if line.find("Total CPU  time used in DALTON:") >= 0:
-                ##print("Capturing TIME!")
                 line2 = streamIn.readline()
                 self.simulationTime = self.readTiming(line, line2)
                 break
@@ -147,17 +149,6 @@ class daltonToJson:
 
     def readResponse(self, line, streamIn):
         self.calcTask["calculationType"] = "LinearResponse"
-        # print("READING RESPONSE")
-
-        self.xx = 0
-        self.xy = 0
-        self.xz = 0
-        self.yx = 0
-        self.yy = 0
-        self.yz = 0
-        self.zx = 0
-        self.zy = 0
-        self.zz = 0
 
         def frequencies(line, streamIn):
             # print("READING FREQ")
@@ -190,7 +181,7 @@ class daltonToJson:
             for f in freq:
                 self.calcSetup["frequencies"].append(float(f.replace("D", "E")))
 
-        def secondOrderProp(line,streamIn):
+        def secondOrderProp(line, streamIn):
             lineSP = line.split()
             opA = lineSP[2]
             opB = lineSP[4]
@@ -242,7 +233,6 @@ class daltonToJson:
                 ),
             ]
         )
-
         # if the line matches to one of these inputs we will take the line
         line = streamIn.readline()
         while line:
@@ -254,10 +244,85 @@ class daltonToJson:
             else:
                 for scfKey in scfInp.keys():
                     if line.find(scfKey) >= 0:
-                        scfInp[scfKey](line,streamIn)
+                        scfInp[scfKey](line, streamIn)
             line = streamIn.readline()
         self.calcTask["calculationResults"] = self.polar_dict
         self.calcTask["calculationSetup"] = self.calcSetup
+        self.calculations.append(self.calcTask)
+
+    def readExcited(self, line, streamIn):
+        # print("READING RESPONSE")
+        self.calcTask["calculationType"] = "SingletExcitationEnergy"
+        # if the line matches to one of these inputs we will take the line
+        line = streamIn.readline()
+        while line:
+            # SCF converged
+            if line.find("Total CPU  time used in ABACUS:") >= 0:
+                line2 = streamIn.readline()
+                self.calcTask["calculationTime"] = self.readTaskTimes(line, line2)
+                break
+            # find the first line to start reading
+            if line.find("==============") >= 0:
+                self.calcRes["frequencies"] = []
+                self.calcRes["Sym"] = []
+                self.calcRes["Mode"] = []
+                line = streamIn.readline()
+                while line:
+                    if line.find("==============") >= 0:
+                        break
+                    # find the first ---- line
+                    if line.find("------------") >= 0:
+                        self.calcRes["frequencies"].append([])
+                        self.calcRes["Sym"].append([])
+                        self.calcRes["Mode"].append([])
+                        line = streamIn.readline()
+                        while line:
+                            if line.find("-----------") >= 0:
+                                self.calcRes["frequencies"].append([])
+                                self.calcRes["Sym"].append([])
+                                self.calcRes["Mode"].append([])
+                            elif line.find("========") == -1:
+                                self.calcRes["frequencies"][-1].append(
+                                    float(line.split()[2])
+                                )
+                                self.calcRes["Sym"][-1].append(int(line.split()[0]))
+                                self.calcRes["Mode"][-1].append(int(line.split()[1]))
+                            else:
+                                break
+                            line = streamIn.readline()
+                    if line.find("==============") >= 0:
+                        break
+                    line = streamIn.readline()
+                    # read if not ------
+            line = streamIn.readline()
+        self.calcTask["calculationResults"] = self.calcRes
+        self.calculations.append(self.calcTask)
+
+    def readDipole(self, line, streamIn):
+        self.calcTask["calculationType"] = "Dipole"
+        self.dipole_dict = {
+            "x": 0,
+            "y": 0,
+            "z": 0
+        }
+        # if the line matches to one of these inputs we will take the line
+        line = streamIn.readline()
+        line = streamIn.readline()
+        line = streamIn.readline()
+        line = streamIn.readline()
+        while line:
+            if line.find("Total CPU  time used in HERMIT:") >= 0:
+                break
+            else:
+                line_split = line.split()
+                if len(line_split) > 0 and ((line_split[0] == 'x') or (line_split[0] == 'y') or (line_split[0] == 'z')):
+                    opKey = line_split[0]
+                    dipole_value = line_split[1]
+                    if opKey:
+                        self.dipole_dict[opKey] = dipole_value
+            line = streamIn.readline()
+
+        self.calcTask["calculationResults"] = self.dipole_dict
         self.calculations.append(self.calcTask)
 
     def readExcited(self, line, streamIn):

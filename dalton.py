@@ -75,7 +75,7 @@ class Dalton:
 
         dalton_inp.append("**END OF DALTON INPUT")
         dalton_inp = "\n".join(dalton_inp)
-        run_dir = self.dalton_dir +"/"+ xc + "/" + molname + "/" + operator
+        run_dir = self.dalton_dir + "/" + xc + "/" + molname + "/" + operator
         if not os.path.exists(run_dir):
             os.makedirs(run_dir)
         # Here I read the madness mol file from the molecules directory
@@ -111,7 +111,7 @@ class Dalton:
         process = subprocess.Popen(daltonCommand.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
         os.chdir(self.base_dir)
-        print("Changed Directory to ",self.base_dir)
+        print("Changed Directory to ", self.base_dir)
         return output, error
 
     @staticmethod
@@ -181,8 +181,10 @@ class Dalton:
         }
         r_dict = {}
         r_dict["frequencies"] = []
-        e_data = json.loads(outfile)["simulation"]["calculations"][0]
-        r_data = json.loads(outfile)["simulation"]["calculations"][1]
+        e_data = json.loads(outfile)["simulation"]["calculations"][1]
+        r_data = json.loads(outfile)["simulation"]["calculations"][2]
+
+        dipole_data = json.loads(outfile)["simulation"]["calculations"][0]
 
         p_data = r_data["calculationResults"]
         f_data = r_data["calculationSetup"]["frequencies"]
@@ -191,7 +193,7 @@ class Dalton:
         r_dict["values"] = p_data
         r_dict["calculationTime"] = r_data["calculationTime"]
 
-        return {basis: {"ground": e_data, "response": r_dict}}
+        return {basis: {"ground": e_data, "response": r_dict, "dipole": dipole_data}}
 
     @staticmethod
     def __create_excited_json(outfile, basis):
@@ -260,18 +262,19 @@ class Dalton:
             if self.run:
                 print("Try and run molecule ", mol)
                 d_out, d_error = self.__run_dalton(run_directory, dal_input, mol_input)
-                print("Finshed running  ",mol," in ",run_directory)
+                print("Finshed running  ", mol, " in ", run_directory)
                 print(d_error)
                 try:
 
                     with open(outfile, "r") as daltonOutput:
                         dj = daltonToJson()
                         data = self.__create_frequency_json(dj.convert(daltonOutput), basis)
-                except ( IndexError) as e:
-                    print("most likely BASIS not found",d_out)
+                except (IndexError) as e:
+                    print("most likely BASIS not found", d_out)
                     pass
             else:
-                print("Not sure what's up")
+
+                print("Did not find ", basis, " data for", mol, "and Dalton is not set to run")
                 pass
         return data
 
@@ -355,9 +358,10 @@ class Dalton:
         dipole_j = self.get_polar_json(mol, xc, operator, basis)[basis]
         time = dipole_j["ground"]["calculationTime"]
         results = dipole_j["ground"]["calculationResults"]
-
+        ground_dipole = dipole_j["dipole"]["calculationResults"]
         gR = {}
         gR["basis"] = basis
+        gR["dipole"] = pd.Series(ground_dipole)
         # results
         gkeys = ["totalEnergy", "nuclearRepulsionEnergy", "electronEnergy"]
         for g in gkeys:
