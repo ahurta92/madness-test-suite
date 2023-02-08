@@ -204,7 +204,7 @@ class MadnessReader:
         j = self.__open_ground_json(mol, xc)
         scf_j = self.__open_ground_scf_json(mol, xc)
         if scf_j:
-            j.update(scf_j[0])
+            j.update(scf_j)
         params = j["parameters"]
         scf_e_data = j["scf_e_data"]
         timing = j["wall_time"]
@@ -213,7 +213,6 @@ class MadnessReader:
 
     def __open_excited_rbj(self, mol, xc, num_states):
 
-        # print(PROOT)
         moldir = self.data_dir + "/" + xc + "/" + mol
         dfile = "excited-" + str(num_states)
         jsonf = "response_base.json"

@@ -980,8 +980,8 @@ def freq_norm_and_residual(mol, xc, op, save, dir):
     # print('num pass: ',num_pass)
     # print('num ran: ',num_ran)
 
-    sns.set_theme(style="darkgrid")
-    sns.set_context("talk", font_scale=1.5, rc={"lines.linewidth": 2.5})
+    #sns.set_theme(style="darkgrid")
+    #sns.set_context("talk", font_scale=1.5, rc={"lines.linewidth": 2.5})
     for i in range(num_ran):
 
         fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(25, 9), constrained_layout=True)
